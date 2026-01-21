@@ -281,10 +281,17 @@
         <div class="form-group">
             <label>Amortización de Capital</label>
             <select id="amortizacionCapital">
-                <option value="Al Vencimiento (Bullet)" selected>Al Vencimiento (Bullet)</option>
+                <option value="Al Vencimiento" selected>Al Vencimiento</option>
                 <option value="Semestral">Semestral</option>
                 <option value="Anual">Anual</option>
             </select>
+        </div>
+
+        <div class="section-title">CALIFICACIÓN DE RIESGO</div>
+
+        <div class="form-group">
+            <label>Costo Calificación de Riesgo (USD)</label>
+            <input type="number" id="calificacionRiesgo" value="1500" step="100" />
         </div>
 
         <div class="section-title">COMISIÓN ESTRUCTURACIÓN Y COLOCACIÓN PER CAPITAL</div>
@@ -305,7 +312,7 @@
         </div>
 
         <div class="info-note">
-            <strong>Nota:</strong> Los demás costos (SUNAVAL, Calificación, BVCC, CVV, etc.) son tarifas del mercado y se calcularán automáticamente.
+            <strong>Nota:</strong> Los costos regulatorios (SUNAVAL, BVCC, CVV, etc.) se calcularán automáticamente. Ajusta la Calificación de Riesgo según el caso específico del cliente.
         </div>
 
         <button class="btn-main" onclick="generarPresupuesto()">GENERAR PRESUPUESTO</button>
@@ -378,12 +385,8 @@
         const registroNacional = monto * tasaRegSUNAVAL;
         const contribucionAnual = monto * 0.005;
 
-        let calificacionRiesgo;
-        if (monto < 50000) {
-            calificacionRiesgo = 800;
-        } else {
-            calificacionRiesgo = esPyme ? 1500 : 3000;
-        }
+        // Usar el valor manual ingresado por el usuario
+        const calificacionRiesgo = parseFloat(document.getElementById('calificacionRiesgo').value);
 
         const estructuracion = monto * tasaEstructuracion;
         const tasaColocacionAplicada = monto > 1000000 ? tasaColocacionMayor : tasaColocacionMenor;
@@ -470,8 +473,8 @@
                         <td colspan="3">CALIFICACIÓN DE RIESGO</td>
                     </tr>
                     <tr>
-                        <td class="label">Calificación de Riesgo Crediticio</td>
-                        <td>${monto < 50000 ? 'Tarifa < $50k' : (esPyme ? 'PYME' : 'Corporativo')}</td>
+                        <td class="label">Calificación de Riesgo</td>
+                        <td>${d.tipoEmisorTexto}</td>
                         <td class="value">${formatUSD(calificacionRiesgo)}</td>
                     </tr>
                     <tr class="category-row">
@@ -534,7 +537,7 @@
                     </tr>
                     <tr class="total-row">
                         <td colspan="2"><strong>COSTO TOTAL DE EMISIÓN</strong></td>
-                        <td class="value"><strong>${formatUSD(costoTotalEmision)}</strong></td>
+                        <td class="value"><strong>${formatUSD(costoTotalEmision)} (${costoFinanciamientoPct.toFixed(2)}%)</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -547,7 +550,7 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = 210;
         const pageHeight = 297;
-        const margin = 10; // Márgenes reducidos para más espacio
+        const margin = 15; // Márgenes profesionales
         const contentWidth = pageWidth - (margin * 2);
 
         let yPos = margin;
@@ -555,8 +558,7 @@
         // LOGO - Posición superior izquierda
         if (LOGO_BASE64) {
             try {
-                // Agregar logo con tamaño optimizado (40mm ancho x 12mm alto)
-                doc.addImage(LOGO_BASE64, 'PNG', margin, yPos, 40, 12);
+                doc.addImage(LOGO_BASE64, 'PNG', margin, yPos, 45, 13);
             } catch (error) {
                 console.error('Error al agregar logo:', error);
             }
@@ -564,38 +566,39 @@
 
         // ENCABEZADO - Lado derecho
         doc.setTextColor(11, 18, 48);
-        doc.setFontSize(14);
+        doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth - margin, yPos + 4, {align: 'right'});
+        doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth - margin, yPos + 6, {align: 'right'});
 
-        doc.setFontSize(6);
+        doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         const fecha = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
-        doc.text(fecha, pageWidth - margin, yPos + 9, {align: 'right'});
-        doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 12, {align: 'right'});
+        doc.text(fecha, pageWidth - margin, yPos + 12, {align: 'right'});
+        doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 16, {align: 'right'});
 
-        yPos += 15;
+        yPos += 20;
 
-        // Línea separadora
+        // Línea separadora más gruesa
         doc.setDrawColor(11, 18, 48);
-        doc.setLineWidth(0.3);
+        doc.setLineWidth(0.5);
         doc.line(margin, yPos, pageWidth - margin, yPos);
 
-        yPos += 4;
+        yPos += 8;
 
-        // INFORMACIÓN DE LA EMPRESA
-        doc.setFontSize(9);
+        // NOMBRE DEL EMISOR - MUY DESTACADO
+        doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(11, 18, 48);
         doc.text(d.empresa, margin, yPos);
-        doc.setFontSize(6);
+
+        doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100, 116, 139);
-        doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin, yPos + 3.5);
+        doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin, yPos + 5);
 
-        yPos += 7;
+        yPos += 12;
 
-        // TABLA DE CARACTERÍSTICAS - Compacta
+        // TABLA DE CARACTERÍSTICAS
         doc.autoTable({
             startY: yPos,
             head: [['CARACTERÍSTICAS DE LA EMISIÓN', 'VALOR']],
@@ -607,68 +610,90 @@
                 ['Amortización Capital', d.amortizacionCapital]
             ],
             theme: 'grid',
-            headStyles: { fillColor: [11, 18, 48], fontSize: 6, fontStyle: 'bold', cellPadding: 1 },
-            bodyStyles: { fontSize: 5.5, cellPadding: 0.8 },
+            headStyles: {
+                fillColor: [11, 18, 48],
+                fontSize: 8,
+                fontStyle: 'bold',
+                cellPadding: 2,
+                textColor: [255, 255, 255]
+            },
+            bodyStyles: {
+                fontSize: 8,
+                cellPadding: 2.5,
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+            },
             columnStyles: {
-                0: { cellWidth: contentWidth * 0.65, fontStyle: 'bold' },
-                1: { cellWidth: contentWidth * 0.35, halign: 'right' }
+                0: { cellWidth: contentWidth * 0.65, fontStyle: 'bold', textColor: [11, 18, 48] },
+                1: { cellWidth: contentWidth * 0.35, halign: 'right', fontStyle: 'bold' }
             },
             margin: { left: margin, right: margin },
             tableWidth: contentWidth
         });
 
-        yPos = doc.lastAutoTable.finalY + 3;
+        yPos = doc.lastAutoTable.finalY + 6;
 
-        // TABLA DE COSTOS - Ultra compacta para que quepa en una página
+        // TABLA DE COSTOS - Diseño profesional
+        const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
+
         doc.autoTable({
             startY: yPos,
             head: [['CONCEPTO', 'TASA / BASE', 'MONTO USD']],
             body: [
-                [{content: 'TASAS REGULATORIAS SUNAVAL', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 5.5}}],
-                ['Registro Nacional SUNAVAL', formatPct(d.tasaRegSUNAVAL), formatUSD(d.registroNacional)],
-                ['Contribución Especial Anual', '0.50%', formatUSD(d.contribucionAnual)],
-                [{content: 'CALIFICACIÓN DE RIESGO', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 5.5}}],
+                [{content: 'TASAS REGULATORIAS SUNAVAL', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 7, textColor: [11, 18, 48]}}],
+                ['Registro Nacional SUNAVAL', formatPct(d.tasaRegSUNAVAL) + ' del monto', formatUSD(d.registroNacional)],
+                ['Contribución Especial Anual', '0.50% del monto', formatUSD(d.contribucionAnual)],
+
+                [{content: 'CALIFICACIÓN DE RIESGO', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 7, textColor: [11, 18, 48]}}],
                 ['Calificación de Riesgo', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
-                [{content: 'COMISIONES PER CAPITAL', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 5.5}}],
-                ['Estructuración Legal', formatPct(d.tasaEstructuracion), formatUSD(d.estructuracion)],
-                ['Colocación en Mercado', formatPct(d.tasaColocacionAplicada), formatUSD(d.colocacion)],
-                [{content: 'OTROS GASTOS DEL MERCADO', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 5.5}}],
-                ['Representación Tenedores', '0.25%', formatUSD(d.representacion)],
+
+                [{content: 'COMISIONES PER CAPITAL', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 7, textColor: [11, 18, 48]}}],
+                ['Estructuración Legal', formatPct(d.tasaEstructuracion) + ' del monto', formatUSD(d.estructuracion)],
+                ['Colocación en Mercado', formatPct(d.tasaColocacionAplicada) + ' del monto', formatUSD(d.colocacion)],
+
+                [{content: 'OTROS GASTOS DEL MERCADO', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 7, textColor: [11, 18, 48]}}],
+                ['Representación Tenedores', '0.25% del monto', formatUSD(d.representacion)],
                 ['Publicación Aviso', 'Plana', formatUSD(d.publicacionAviso)],
-                ['Bolsa de Valores (BVCC)', '0.50%', formatUSD(d.bvcc)],
+                ['Bolsa de Valores (BVCC)', '0.50% del monto', formatUSD(d.bvcc)],
                 ['Inscripción ISIN', 'S/plazo', formatUSD(d.inscripcionISIN)],
                 ['Custodia CVV', '0.03%/mes', formatUSD(d.cvvTotal)],
                 ['IVA sobre CVV', '16%', formatUSD(d.iva)],
-                [{content: 'TOTAL COMISIONES', styles: {fillColor: [240, 249, 255], fontStyle: 'bold', fontSize: 5.5}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [240, 249, 255], fontStyle: 'bold'}}],
-                [{content: 'PROYECCIÓN DE INTERESES', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 5.5}}],
-                ['Intereses Totales', formatPct(d.tasa), formatUSD(d.interesesTotales)],
-                [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [11, 18, 48], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 6}}, '', {content: formatUSD(d.costoTotalEmision), styles: {fillColor: [11, 18, 48], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 6}}]
+
+                [{content: 'TOTAL COMISIONES', styles: {fillColor: [240, 249, 255], fontStyle: 'bold', fontSize: 7, textColor: [11, 18, 48]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [240, 249, 255], fontStyle: 'bold', fontSize: 7}}],
+
+                [{content: 'PROYECCIÓN DE INTERESES', colSpan: 3, styles: {fillColor: [219, 234, 254], fontStyle: 'bold', fontSize: 7, textColor: [11, 18, 48]}}],
+                ['Intereses Totales', formatPct(d.tasa) + ' anual', formatUSD(d.interesesTotales)],
+
+                [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [11, 18, 48], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}, '', {content: formatUSD(d.costoTotalEmision) + ' (' + pctTotal + '%)', styles: {fillColor: [11, 18, 48], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}]
             ],
             theme: 'grid',
-            headStyles: { fillColor: [11, 18, 48], fontSize: 6, fontStyle: 'bold', cellPadding: 1 },
-            bodyStyles: { fontSize: 5, cellPadding: 0.7 },
+            headStyles: {
+                fillColor: [11, 18, 48],
+                fontSize: 8,
+                fontStyle: 'bold',
+                cellPadding: 2,
+                textColor: [255, 255, 255]
+            },
+            bodyStyles: {
+                fontSize: 7,
+                cellPadding: 1.8,
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+            },
             columnStyles: {
-                0: { cellWidth: contentWidth * 0.48 },
-                1: { cellWidth: contentWidth * 0.27, halign: 'center' },
+                0: { cellWidth: contentWidth * 0.50 },
+                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 6.5 },
                 2: { cellWidth: contentWidth * 0.25, halign: 'right', fontStyle: 'bold' }
             },
             margin: { left: margin, right: margin },
-            tableWidth: contentWidth,
-            didDrawPage: function(data) {
-                // Verificar si estamos en la segunda página (lo cual NO queremos)
-                if (doc.internal.getNumberOfPages() > 1) {
-                    console.warn('⚠️ El PDF tiene más de una página. Ajusta el contenido.');
-                }
-            }
+            tableWidth: contentWidth
         });
 
         // PIE DE PÁGINA
-        yPos = doc.lastAutoTable.finalY + 3;
-        if (yPos < pageHeight - 15) {
-            doc.setFontSize(5.5);
-            doc.setTextColor(100, 116, 139);
-            doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
-        }
+        yPos = doc.lastAutoTable.finalY + 6;
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
         doc.save(`Presupuesto_${d.empresa}.pdf`);
     }
