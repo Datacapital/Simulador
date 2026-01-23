@@ -621,43 +621,43 @@
                 }
             }
 
-            yPos += 22;
+            yPos += 18;
 
             // TÍTULO PRINCIPAL - CENTRADO (Color: R:0 G:0 B:50)
             doc.setTextColor(0, 0, 50);
-            doc.setFontSize(18);
+            doc.setFontSize(16);
             doc.setFont("helvetica", "bold");
             doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth / 2, yPos, {align: 'center'});
 
-            yPos += 7;
+            yPos += 6;
 
             // FECHA Y LUGAR - Derecha (Color: R:133 G:157 B:169)
-            doc.setFontSize(8);
+            doc.setFontSize(7.5);
             doc.setFont("helvetica", "normal");
             doc.setTextColor(133, 157, 169);
             const fecha = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
             doc.text(fecha, pageWidth - margin, yPos, {align: 'right'});
-            doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 4, {align: 'right'});
+            doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 3.5, {align: 'right'});
 
-            yPos += 8;
+            yPos += 7;
 
             // Línea separadora (Color: R:0 G:0 B:50)
             doc.setDrawColor(0, 0, 50);
             doc.setLineWidth(0.8);
             doc.line(margin, yPos, pageWidth - margin, yPos);
 
-            yPos += 10;
+            yPos += 8;
 
             // NOMBRE DE LA EMPRESA - Caja con fondo gris azulado suave
             doc.setFillColor(240, 243, 245);
-            doc.rect(margin, yPos - 4, contentWidth, 11, 'F');
+            doc.rect(margin, yPos - 3, contentWidth, 9, 'F');
 
-            doc.setFontSize(13);
+            doc.setFontSize(12);
             doc.setFont("helvetica", "bold");
             doc.setTextColor(0, 0, 50);
-            doc.text(d.empresa, margin + 4, yPos + 2.5);
+            doc.text(d.empresa, margin + 4, yPos + 1.5);
 
-            yPos += 12;
+            yPos += 10;
 
             // TABLA DE CARACTERÍSTICAS - Diseño corporativo con colores de marca
             doc.autoTable({
@@ -673,14 +673,14 @@
             theme: 'grid',
             headStyles: {
                 fillColor: [0, 0, 50],
-                fontSize: 9,
+                fontSize: 8.5,
                 fontStyle: 'bold',
-                cellPadding: 3,
+                cellPadding: 2.5,
                 textColor: [255, 255, 255]
             },
             bodyStyles: {
-                fontSize: 8.5,
-                cellPadding: 3,
+                fontSize: 8,
+                cellPadding: 2.5,
                 lineColor: [133, 157, 169],
                 lineWidth: 0.2,
                 textColor: [34, 30, 31]
@@ -696,7 +696,7 @@
             }
             });
 
-            yPos = doc.lastAutoTable.finalY + 7;
+            yPos = doc.lastAutoTable.finalY + 5;
 
             // TABLA DE COSTOS - Diseño MEGA CORPORATIVO con colores de marca
             const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
@@ -734,21 +734,21 @@
             theme: 'grid',
             headStyles: {
                 fillColor: [0, 0, 50],
-                fontSize: 9,
+                fontSize: 8.5,
                 fontStyle: 'bold',
-                cellPadding: 2.5,
+                cellPadding: 2,
                 textColor: [255, 255, 255]
             },
             bodyStyles: {
-                fontSize: 7.5,
-                cellPadding: 2.2,
+                fontSize: 7.2,
+                cellPadding: 1.8,
                 lineColor: [133, 157, 169],
                 lineWidth: 0.2,
                 textColor: [34, 30, 31]
             },
             columnStyles: {
                 0: { cellWidth: contentWidth * 0.50 },
-                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 7.5, textColor: [34, 30, 31], fontStyle: 'bold' },
+                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 7.2, textColor: [34, 30, 31], fontStyle: 'bold' },
                 2: { cellWidth: contentWidth * 0.25, halign: 'right', fontStyle: 'bold', textColor: [0, 0, 50] }
             },
             margin: { left: margin, right: margin },
@@ -759,13 +759,13 @@
             });
 
             // PIE DE PÁGINA con color corporativo
-            yPos = doc.lastAutoTable.finalY + 7;
-            doc.setFontSize(7.5);
+            yPos = doc.lastAutoTable.finalY + 5;
+            doc.setFontSize(7);
             doc.setTextColor(133, 157, 169);
             doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
             // ====== MARCA DE AGUA - DIBUJAR AL FINAL ENCIMA DE TODO ======
-            crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.25, function(marcaDeAguaBase64) {
+            crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.35, function(marcaDeAguaBase64) {
                 try {
                     // Logo grande centrado como marca de agua semi-transparente
                     const watermarkWidth = 100;
