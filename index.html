@@ -621,15 +621,15 @@
                 }
             }
 
-            yPos += 20;
+            yPos += 22;
 
             // TÍTULO PRINCIPAL - CENTRADO (Color: R:0 G:0 B:50)
             doc.setTextColor(0, 0, 50);
-            doc.setFontSize(16);
+            doc.setFontSize(18);
             doc.setFont("helvetica", "bold");
             doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth / 2, yPos, {align: 'center'});
 
-            yPos += 6;
+            yPos += 7;
 
             // FECHA Y LUGAR - Derecha (Color: R:133 G:157 B:169)
             doc.setFontSize(8);
@@ -646,18 +646,18 @@
             doc.setLineWidth(0.8);
             doc.line(margin, yPos, pageWidth - margin, yPos);
 
-            yPos += 8;
+            yPos += 10;
 
             // NOMBRE DE LA EMPRESA - Caja con fondo gris azulado suave
             doc.setFillColor(240, 243, 245);
-            doc.rect(margin, yPos - 3, contentWidth, 9, 'F');
+            doc.rect(margin, yPos - 4, contentWidth, 11, 'F');
 
-            doc.setFontSize(12);
+            doc.setFontSize(13);
             doc.setFont("helvetica", "bold");
             doc.setTextColor(0, 0, 50);
-            doc.text(d.empresa, margin + 4, yPos + 2);
+            doc.text(d.empresa, margin + 4, yPos + 2.5);
 
-            yPos += 10;
+            yPos += 12;
 
             // TABLA DE CARACTERÍSTICAS - Diseño corporativo con colores de marca
             doc.autoTable({
@@ -673,14 +673,14 @@
             theme: 'grid',
             headStyles: {
                 fillColor: [0, 0, 50],
-                fontSize: 8,
+                fontSize: 9,
                 fontStyle: 'bold',
-                cellPadding: 2,
+                cellPadding: 3,
                 textColor: [255, 255, 255]
             },
             bodyStyles: {
-                fontSize: 7.5,
-                cellPadding: 2,
+                fontSize: 8.5,
+                cellPadding: 3,
                 lineColor: [133, 157, 169],
                 lineWidth: 0.2,
                 textColor: [34, 30, 31]
@@ -696,7 +696,7 @@
             }
             });
 
-            yPos = doc.lastAutoTable.finalY + 5;
+            yPos = doc.lastAutoTable.finalY + 7;
 
             // TABLA DE COSTOS - Diseño MEGA CORPORATIVO con colores de marca
             const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
@@ -734,21 +734,21 @@
             theme: 'grid',
             headStyles: {
                 fillColor: [0, 0, 50],
-                fontSize: 8,
+                fontSize: 9,
                 fontStyle: 'bold',
-                cellPadding: 1.8,
+                cellPadding: 2.5,
                 textColor: [255, 255, 255]
             },
             bodyStyles: {
-                fontSize: 6.8,
-                cellPadding: 1.5,
+                fontSize: 7.5,
+                cellPadding: 2.2,
                 lineColor: [133, 157, 169],
                 lineWidth: 0.2,
                 textColor: [34, 30, 31]
             },
             columnStyles: {
                 0: { cellWidth: contentWidth * 0.50 },
-                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 6.5, textColor: [133, 157, 169] },
+                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 7.5, textColor: [34, 30, 31], fontStyle: 'bold' },
                 2: { cellWidth: contentWidth * 0.25, halign: 'right', fontStyle: 'bold', textColor: [0, 0, 50] }
             },
             margin: { left: margin, right: margin },
@@ -759,8 +759,8 @@
             });
 
             // PIE DE PÁGINA con color corporativo
-            yPos = doc.lastAutoTable.finalY + 5;
-            doc.setFontSize(7);
+            yPos = doc.lastAutoTable.finalY + 7;
+            doc.setFontSize(7.5);
             doc.setTextColor(133, 157, 169);
             doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
