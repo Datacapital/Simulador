@@ -598,25 +598,8 @@
 
         let yPos = margin;
 
-        // Crear versión semi-transparente para marca de agua primero
-        crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.3, function(marcaDeAguaBase64) {
-            // Luego convertir logo normal
-            convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
-
-                // ====== MARCA DE AGUA - LOGO PER CAPITAL SEMI-TRANSPARENTE ======
-                // Se dibuja ANTES del contenido para que quede detrás
-                try {
-                    // Logo grande centrado como marca de agua
-                    const watermarkWidth = 110;
-                    const watermarkHeight = 33; // Altura proporcional al logo horizontal
-                    const watermarkX = (pageWidth - watermarkWidth) / 2;
-                    const watermarkY = (pageHeight - watermarkHeight) / 2 + 20; // Centrado verticalmente
-
-                    // Usar la versión pre-procesada con transparencia
-                    doc.addImage(marcaDeAguaBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
-                } catch (error) {
-                    console.error('Error al agregar marca de agua:', error);
-                }
+        // Convertir logo normal de Per Capital
+        convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
 
             // ====== LOGOS PRINCIPALES ======
             // LOGO PER CAPITAL - Posición superior IZQUIERDA
@@ -778,9 +761,26 @@
             doc.setTextColor(133, 157, 169);
             doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
-            doc.save(`Presupuesto_${d.empresa}.pdf`);
-            }); // Cierre de convertirImagenABase64
-        }); // Cierre de crearMarcaDeAgua
+            // ====== MARCA DE AGUA - DIBUJAR AL FINAL ENCIMA DE TODO ======
+            // Crear versión semi-transparente del logo para marca de agua
+            crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.15, function(marcaDeAguaBase64) {
+                try {
+                    // Logo grande centrado como marca de agua
+                    const watermarkWidth = 120;
+                    const watermarkHeight = 36;
+                    const watermarkX = (pageWidth - watermarkWidth) / 2;
+                    const watermarkY = (pageHeight - watermarkHeight) / 2 + 10;
+
+                    // Dibujar marca de agua encima de todo el contenido
+                    doc.addImage(marcaDeAguaBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
+                } catch (error) {
+                    console.error('Error al agregar marca de agua:', error);
+                }
+
+                // Guardar PDF
+                doc.save(`Presupuesto_${d.empresa}.pdf`);
+            }); // Cierre de crearMarcaDeAgua
+        }); // Cierre de convertirImagenABase64
     }
 </script>
 </body>
