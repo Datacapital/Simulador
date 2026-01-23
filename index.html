@@ -592,50 +592,54 @@
             // LOGO EMPRESA - Posición superior DERECHA
             if (LOGO_EMPRESA_BASE64) {
                 try {
-                    doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 35, yPos, 35, 12);
+                    doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 40, yPos, 40, 12);
                 } catch (error) {
                     console.error('Error al agregar logo de la empresa:', error);
                 }
             }
 
-            yPos += 15;
+            yPos += 18;
 
-            // TÍTULO CENTRADO
-            doc.setTextColor(11, 18, 48);
-            doc.setFontSize(16);
+            // TÍTULO PRINCIPAL - CENTRADO Y MÁS GRANDE
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(18);
             doc.setFont("helvetica", "bold");
             doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth / 2, yPos, {align: 'center'});
 
-            yPos += 5;
+            yPos += 7;
 
-            // FECHA Y LUGAR - Centrado debajo del título
+            // FECHA Y LUGAR - Derecha, debajo del título
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
+            doc.setTextColor(71, 85, 105);
             const fecha = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
-            doc.text(fecha, pageWidth / 2, yPos, {align: 'center'});
-            doc.text("Caracas, Venezuela", pageWidth / 2, yPos + 4, {align: 'center'});
+            doc.text(fecha, pageWidth - margin, yPos, {align: 'right'});
+            doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 4, {align: 'right'});
 
-            yPos += 8;
+            yPos += 10;
 
-            // Línea separadora más gruesa
-            doc.setDrawColor(11, 18, 48);
-            doc.setLineWidth(0.5);
+            // Línea separadora gruesa y elegante
+            doc.setDrawColor(71, 85, 105);
+            doc.setLineWidth(0.8);
             doc.line(margin, yPos, pageWidth - margin, yPos);
 
-            yPos += 8;
+            yPos += 10;
 
-            // NOMBRE DEL EMISOR - MUY DESTACADO
-            doc.setFontSize(14);
+            // NOMBRE DE LA EMPRESA - Caja con fondo gris claro
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin, yPos - 4, contentWidth, 12, 'F');
+
+            doc.setFontSize(13);
             doc.setFont("helvetica", "bold");
-            doc.setTextColor(11, 18, 48);
-            doc.text(d.empresa, margin, yPos);
+            doc.setTextColor(15, 23, 42);
+            doc.text(d.empresa, margin + 4, yPos + 2);
 
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
             doc.setTextColor(100, 116, 139);
-            doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin, yPos + 5);
+            doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin + 4, yPos + 7);
 
-            yPos += 12;
+            yPos += 16;
 
             // TABLA DE CARACTERÍSTICAS - Diseño corporativo
             doc.autoTable({
