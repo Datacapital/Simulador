@@ -241,9 +241,9 @@
         </div>
 
         <div class="logo-upload-section">
-            <strong>⚙️ Cargar Logo para PDF:</strong><br>
-            Selecciona el logo de la empresa (PNG/JPG, recomendado 200x60px)
-            <input type="file" id="logoUpload" accept="image/*" onchange="cargarLogo(event)" />
+            <strong>⚙️ Cargar Logo del Cliente para PDF:</strong><br>
+            Selecciona el logo de la empresa emisora (PNG/JPG, recomendado 200x60px). Aparecerá en la esquina superior derecha del PDF.
+            <input type="file" id="logoUpload" accept="image/*" onchange="cargarLogoEmpresa(event)" />
         </div>
 
         <div class="section-title">DATOS DEL CLIENTE</div>
@@ -354,24 +354,42 @@
 </div>
 
 <script>
-    // Variable global para almacenar el logo en base64
-    let LOGO_BASE64 = "";
+    // Logo fijo de Per Capital (izquierda del PDF)
+    const LOGO_PERCAPITAL_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769023852/Logo-Per-Capital-horizontal-negro_1_nmd85u.png";
+
+    // Variable para almacenar el logo de la empresa (derecha del PDF)
+    let LOGO_EMPRESA_BASE64 = "";
 
     let d = {};
     const formatUSD = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
     const formatPct = (v) => v.toFixed(2) + '%';
 
-    // Función para cargar el logo
-    function cargarLogo(event) {
+    // Función para cargar el logo de la empresa cliente
+    function cargarLogoEmpresa(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                LOGO_BASE64 = e.target.result;
-                alert('Logo cargado exitosamente. Ahora podrás verlo en el PDF.');
+                LOGO_EMPRESA_BASE64 = e.target.result;
+                alert('Logo del cliente cargado exitosamente. Aparecerá en la esquina superior derecha del PDF.');
             };
             reader.readAsDataURL(file);
         }
+    }
+
+    // Función para convertir imagen de URL a base64
+    function convertirImagenABase64(url, callback) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            callback(canvas.toDataURL('image/png'));
+        };
+        img.src = url;
     }
 
     function generarPresupuesto() {
@@ -556,56 +574,71 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = 210;
         const pageHeight = 297;
-        const margin = 15; // Márgenes profesionales
+        const margin = 15;
         const contentWidth = pageWidth - (margin * 2);
 
         let yPos = margin;
 
-        // LOGO - Posición superior izquierda
-        if (LOGO_BASE64) {
+        // Convertir logo de Per Capital y generar PDF
+        convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
+
+            // LOGO PER CAPITAL - Posición superior IZQUIERDA
             try {
-                doc.addImage(LOGO_BASE64, 'PNG', margin, yPos, 45, 13);
+                doc.addImage(logoPerCapitalBase64, 'PNG', margin, yPos, 40, 12);
             } catch (error) {
-                console.error('Error al agregar logo:', error);
+                console.error('Error al agregar logo Per Capital:', error);
             }
-        }
 
-        // ENCABEZADO - Lado derecho
-        doc.setTextColor(11, 18, 48);
-        doc.setFontSize(16);
-        doc.setFont("helvetica", "bold");
-        doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth - margin, yPos + 6, {align: 'right'});
+            // LOGO EMPRESA - Posición superior DERECHA
+            if (LOGO_EMPRESA_BASE64) {
+                try {
+                    doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 35, yPos, 35, 12);
+                } catch (error) {
+                    console.error('Error al agregar logo de la empresa:', error);
+                }
+            }
 
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        const fecha = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
-        doc.text(fecha, pageWidth - margin, yPos + 12, {align: 'right'});
-        doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 16, {align: 'right'});
+            yPos += 15;
 
-        yPos += 20;
+            // TÍTULO CENTRADO
+            doc.setTextColor(11, 18, 48);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth / 2, yPos, {align: 'center'});
 
-        // Línea separadora más gruesa
-        doc.setDrawColor(11, 18, 48);
-        doc.setLineWidth(0.5);
-        doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 5;
 
-        yPos += 8;
+            // FECHA Y LUGAR - Centrado debajo del título
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            const fecha = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
+            doc.text(fecha, pageWidth / 2, yPos, {align: 'center'});
+            doc.text("Caracas, Venezuela", pageWidth / 2, yPos + 4, {align: 'center'});
 
-        // NOMBRE DEL EMISOR - MUY DESTACADO
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(11, 18, 48);
-        doc.text(d.empresa, margin, yPos);
+            yPos += 8;
 
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(100, 116, 139);
-        doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin, yPos + 5);
+            // Línea separadora más gruesa
+            doc.setDrawColor(11, 18, 48);
+            doc.setLineWidth(0.5);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
 
-        yPos += 12;
+            yPos += 8;
 
-        // TABLA DE CARACTERÍSTICAS
-        doc.autoTable({
+            // NOMBRE DEL EMISOR - MUY DESTACADO
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(11, 18, 48);
+            doc.text(d.empresa, margin, yPos);
+
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(100, 116, 139);
+            doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin, yPos + 5);
+
+            yPos += 12;
+
+            // TABLA DE CARACTERÍSTICAS
+            doc.autoTable({
             startY: yPos,
             head: [['CARACTERÍSTICAS DE LA EMISIÓN', 'VALOR']],
             body: [
@@ -635,14 +668,14 @@
             },
             margin: { left: margin, right: margin },
             tableWidth: contentWidth
-        });
+            });
 
-        yPos = doc.lastAutoTable.finalY + 6;
+            yPos = doc.lastAutoTable.finalY + 6;
 
-        // TABLA DE COSTOS - Diseño profesional con COLORES FUERTES
-        const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
+            // TABLA DE COSTOS - Diseño profesional con COLORES FUERTES
+            const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
 
-        doc.autoTable({
+            doc.autoTable({
             startY: yPos,
             head: [['CONCEPTO', 'TASA / BASE', 'MONTO USD']],
             body: [
@@ -693,15 +726,16 @@
             },
             margin: { left: margin, right: margin },
             tableWidth: contentWidth
-        });
+            });
 
-        // PIE DE PÁGINA
-        yPos = doc.lastAutoTable.finalY + 6;
-        doc.setFontSize(7);
-        doc.setTextColor(100, 116, 139);
-        doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
+            // PIE DE PÁGINA
+            yPos = doc.lastAutoTable.finalY + 6;
+            doc.setFontSize(7);
+            doc.setTextColor(100, 116, 139);
+            doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
-        doc.save(`Presupuesto_${d.empresa}.pdf`);
+            doc.save(`Presupuesto_${d.empresa}.pdf`);
+        }); // Cierre de convertirImagenABase64
     }
 </script>
 </body>
