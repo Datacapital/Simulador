@@ -605,12 +605,6 @@
         convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
 
             // ====== LOGOS PRINCIPALES ======
-            // Agregar espacio en blanco con borde para destacar el logo
-            doc.setFillColor(255, 255, 255);
-            doc.setDrawColor(220, 230, 235);
-            doc.setLineWidth(0.5);
-            doc.rect(margin - 2, yPos - 2, 44, 16, 'FD');
-
             // LOGO PER CAPITAL - Posición superior IZQUIERDA
             try {
                 doc.addImage(logoPerCapitalBase64, 'PNG', margin, yPos, 40, 12);
@@ -621,12 +615,6 @@
             // LOGO EMPRESA - Posición superior DERECHA
             if (LOGO_EMPRESA_BASE64) {
                 try {
-                    // Agregar espacio en blanco con borde para el logo del cliente
-                    doc.setFillColor(255, 255, 255);
-                    doc.setDrawColor(220, 230, 235);
-                    doc.setLineWidth(0.5);
-                    doc.rect(pageWidth - margin - 42, yPos - 2, 44, 16, 'FD');
-
                     doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 40, yPos, 40, 12);
                 } catch (error) {
                     console.error('Error al agregar logo de la empresa:', error);
