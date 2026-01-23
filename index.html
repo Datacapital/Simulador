@@ -392,6 +392,25 @@
         img.src = url;
     }
 
+    // Función para crear versión semi-transparente de una imagen para marca de agua
+    function crearMarcaDeAgua(url, opacidad, callback) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+
+            // Establecer opacidad antes de dibujar
+            ctx.globalAlpha = opacidad;
+            ctx.drawImage(img, 0, 0);
+
+            callback(canvas.toDataURL('image/png'));
+        };
+        img.src = url;
+    }
+
     function generarPresupuesto() {
         const monto = parseFloat(document.getElementById('monto').value);
         const plazo = parseInt(document.getElementById('plazo').value);
@@ -579,28 +598,25 @@
 
         let yPos = margin;
 
-        // Convertir logo de Per Capital y generar PDF
-        convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
+        // Crear versión semi-transparente para marca de agua primero
+        crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.3, function(marcaDeAguaBase64) {
+            // Luego convertir logo normal
+            convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
 
-            // ====== MARCA DE AGUA - LOGO PER CAPITAL SEMI-TRANSPARENTE ======
-            // Se dibuja ANTES del contenido para que quede detrás
-            try {
-                // Configurar opacidad para la marca de agua (MÁS VISIBLE)
-                doc.setGState(new doc.GState({opacity: 0.25})); // Aumentado a 0.25 para mayor visibilidad
+                // ====== MARCA DE AGUA - LOGO PER CAPITAL SEMI-TRANSPARENTE ======
+                // Se dibuja ANTES del contenido para que quede detrás
+                try {
+                    // Logo grande centrado como marca de agua
+                    const watermarkWidth = 110;
+                    const watermarkHeight = 33; // Altura proporcional al logo horizontal
+                    const watermarkX = (pageWidth - watermarkWidth) / 2;
+                    const watermarkY = (pageHeight - watermarkHeight) / 2 + 20; // Centrado verticalmente
 
-                // Logo grande centrado como marca de agua
-                const watermarkWidth = 110;
-                const watermarkHeight = 33; // Altura proporcional al logo horizontal
-                const watermarkX = (pageWidth - watermarkWidth) / 2;
-                const watermarkY = (pageHeight - watermarkHeight) / 2 + 20; // Centrado verticalmente
-
-                doc.addImage(logoPerCapitalBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
-
-                // Restaurar opacidad normal para el resto del documento
-                doc.setGState(new doc.GState({opacity: 1.0}));
-            } catch (error) {
-                console.error('Error al agregar marca de agua:', error);
-            }
+                    // Usar la versión pre-procesada con transparencia
+                    doc.addImage(marcaDeAguaBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
+                } catch (error) {
+                    console.error('Error al agregar marca de agua:', error);
+                }
 
             // ====== LOGOS PRINCIPALES ======
             // LOGO PER CAPITAL - Posición superior IZQUIERDA
@@ -763,7 +779,8 @@
             doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
             doc.save(`Presupuesto_${d.empresa}.pdf`);
-        }); // Cierre de convertirImagenABase64
+            }); // Cierre de convertirImagenABase64
+        }); // Cierre de crearMarcaDeAgua
     }
 </script>
 </body>
