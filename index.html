@@ -357,6 +357,9 @@
     // Logo fijo de Per Capital (izquierda del PDF)
     const LOGO_PERCAPITAL_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769023852/Logo-Per-Capital-horizontal-negro_1_nmd85u.png";
 
+    // Logo para marca de agua (centro del PDF)
+    const LOGO_MARCA_AGUA_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769177548/Nombre-Per-Capital-gris_e6yggs.png";
+
     // Variable para almacenar el logo de la empresa (derecha del PDF)
     let LOGO_EMPRESA_BASE64 = "";
 
@@ -763,13 +766,13 @@
 
             // ====== MARCA DE AGUA - DIBUJAR AL FINAL ENCIMA DE TODO ======
             // Crear versión semi-transparente del logo para marca de agua
-            crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.25, function(marcaDeAguaBase64) {
+            crearMarcaDeAgua(LOGO_MARCA_AGUA_URL, 0.25, function(marcaDeAguaBase64) {
                 try {
                     // Logo grande centrado como marca de agua
-                    const watermarkWidth = 120;
-                    const watermarkHeight = 36;
+                    const watermarkWidth = 80;
+                    const watermarkHeight = 80;
                     const watermarkX = (pageWidth - watermarkWidth) / 2;
-                    const watermarkY = (pageHeight - watermarkHeight) / 2 + 10;
+                    const watermarkY = (pageHeight - watermarkHeight) / 2;
 
                     // Dibujar marca de agua encima de todo el contenido
                     doc.addImage(marcaDeAguaBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
