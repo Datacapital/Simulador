@@ -583,37 +583,24 @@
         convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
 
             // ====== MARCA DE AGUA - LOGO PER CAPITAL SEMI-TRANSPARENTE ======
-            doc.saveGraphicsState();
-            doc.setGState(new doc.GState({opacity: 0.08}));
+            // Se dibuja ANTES del contenido para que quede detrás
             try {
+                // Configurar opacidad para la marca de agua
+                doc.setGState(new doc.GState({opacity: 0.15})); // Aumentado de 0.08 a 0.15 para mejor visibilidad
+
                 // Logo grande centrado como marca de agua
-                const watermarkSize = 120;
-                const watermarkX = (pageWidth - watermarkSize) / 2;
-                const watermarkY = (pageHeight - watermarkSize * 0.3) / 2;
-                doc.addImage(logoPerCapitalBase64, 'PNG', watermarkX, watermarkY, watermarkSize, watermarkSize * 0.3);
+                const watermarkWidth = 100;
+                const watermarkHeight = 30; // Altura proporcional al logo horizontal
+                const watermarkX = (pageWidth - watermarkWidth) / 2;
+                const watermarkY = (pageHeight - watermarkHeight) / 2 + 20; // Centrado verticalmente
+
+                doc.addImage(logoPerCapitalBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
+
+                // Restaurar opacidad normal para el resto del documento
+                doc.setGState(new doc.GState({opacity: 1.0}));
             } catch (error) {
                 console.error('Error al agregar marca de agua:', error);
             }
-            doc.restoreGraphicsState();
-
-            // ====== LÍNEAS DECORATIVAS SEMI-TRANSPARENTES ======
-            doc.saveGraphicsState();
-            doc.setGState(new doc.GState({opacity: 0.12}));
-            doc.setDrawColor(0, 0, 50);
-            doc.setLineWidth(0.3);
-
-            // Líneas diagonales en las esquinas
-            // Esquina superior izquierda
-            for (let i = 0; i < 5; i++) {
-                doc.line(margin + i*8, margin, margin + 40 + i*8, margin + 40);
-            }
-
-            // Esquina inferior derecha
-            for (let i = 0; i < 5; i++) {
-                doc.line(pageWidth - margin - 40 - i*8, pageHeight - margin - 40, pageWidth - margin - i*8, pageHeight - margin);
-            }
-
-            doc.restoreGraphicsState();
 
             // ====== LOGOS PRINCIPALES ======
             // LOGO PER CAPITAL - Posición superior IZQUIERDA
