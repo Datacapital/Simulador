@@ -10,176 +10,212 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
-            --primary: #0b1230;
-            --secondary: #64748B;
-            --accent: #3b82f6;
+            --primary: #0a0f2c;
+            --secondary: #475569;
+            --accent: #2563eb;
             --card: #FFFFFF;
-            --text: #1E293B;
+            --text: #0f172a;
             --border: #1e3a8a;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #071031; color: var(--text); padding: 15px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050a1a; color: var(--text); padding: 15px; }
 
         .app-container {
-            max-width: 1500px;
+            max-width: 1600px;
             margin: 0 auto;
             background: var(--card);
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(59,130,246,0.15);
+            border-radius: 14px;
+            box-shadow: 0 25px 60px rgba(37,99,235,0.2);
             display: grid;
-            grid-template-columns: 380px 1fr;
-            min-height: 92vh;
+            grid-template-columns: 420px 1fr;
+            min-height: 94vh;
             overflow: hidden;
-            border: 1px solid #1e3a8a;
+            border: 2px solid #1e3a8a;
         }
 
         .sidebar {
-            background: #F8FAFC;
-            padding: 20px 18px;
-            border-right: 1px solid #1e3a8a;
+            background: #f1f5f9;
+            padding: 25px 22px;
+            border-right: 2px solid #1e3a8a;
             overflow-y: auto;
-            max-height: 92vh;
+            max-height: 94vh;
         }
 
-        .brand-header { margin-bottom: 15px; }
+        .brand-header { margin-bottom: 20px; }
         .brand-header h1 {
-            color: var(--primary);
-            font-weight: 800;
-            font-size: 1.1rem;
-            border-left: 4px solid #3b82f6;
-            padding-left: 10px;
+            color: #0a0f2c;
+            font-weight: 900;
+            font-size: 1.5rem;
+            border-left: 5px solid #2563eb;
+            padding-left: 12px;
+            letter-spacing: -0.5px;
         }
-        .brand-header p { font-size: 0.6rem; color: var(--secondary); margin-top: 3px; padding-left: 14px; }
+        .brand-header p { font-size: 0.8rem; color: #1e40af; margin-top: 4px; padding-left: 17px; font-weight: 600; }
 
         .section-title {
-            font-size: 0.55rem;
-            font-weight: 800;
-            color: #3b82f6;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #1d4ed8;
             text-transform: uppercase;
-            margin: 12px 0 8px 0;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 3px;
+            margin: 18px 0 12px 0;
+            letter-spacing: 1.2px;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 5px;
         }
 
-        .form-group { margin-bottom: 10px; }
+        .form-group { margin-bottom: 14px; }
         label {
             display: block;
-            font-size: 0.55rem;
-            font-weight: 700;
-            color: var(--secondary);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #334155;
             text-transform: uppercase;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
+            letter-spacing: 0.3px;
         }
         input, select {
             width: 100%;
-            padding: 7px;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            font-size: 0.75rem;
+            padding: 10px 12px;
+            border: 2px solid #1e3a8a;
+            border-radius: 6px;
+            font-size: 0.95rem;
             background: white;
-            color: var(--primary);
-            font-weight: 500;
+            color: #0a0f2c;
+            font-weight: 600;
         }
-
-        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+        }
 
         .btn-main {
             width: 100%;
-            padding: 12px;
-            background: var(--primary);
+            padding: 16px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-weight: 700;
+            border-radius: 8px;
+            font-weight: 800;
             cursor: pointer;
-            margin-top: 12px;
+            margin-top: 18px;
             text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            transition: all 0.3s;
         }
-        .btn-main:hover { background: #1e293b; }
+        .btn-main:hover { 
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        }
 
-        .main-content { padding: 25px; background: white; overflow-y: auto; max-height: 92vh; }
+        .main-content { padding: 30px; background: white; overflow-y: auto; max-height: 94vh; }
 
         .empty-state {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; color: var(--secondary); text-align: center;
+            height: 100%; color: #64748b; text-align: center; font-size: 1.1rem;
         }
 
         .summary-header {
             display: flex; justify-content: space-between; align-items: flex-end;
-            margin-bottom: 20px; border-bottom: 2px solid #dbeafe; padding-bottom: 12px;
+            margin-bottom: 25px; border-bottom: 3px solid #dbeafe; padding-bottom: 18px;
         }
-        .summary-title-area h2 { font-size: 1.3rem; color: var(--primary); font-weight: 800; }
-        .summary-title-area p { color: var(--secondary); font-size: 0.8rem; margin-top: 3px; }
+        .summary-title-area h2 { font-size: 1.7rem; color: #0a0f2c; font-weight: 900; }
+        .summary-title-area p { color: #1e40af; font-size: 1.05rem; margin-top: 5px; font-weight: 600; }
 
         .cost-hero { text-align: right; }
-        .cost-label { font-size: 0.6rem; font-weight: 700; color: #3b82f6; text-transform: uppercase; }
-        .cost-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); line-height: 1; }
-        .cost-sub { font-size: 0.8rem; color: var(--secondary); font-weight: 500; margin-top: 3px; }
+        .cost-label { font-size: 0.8rem; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cost-value { font-size: 2.4rem; font-weight: 900; color: #0a0f2c; line-height: 1; }
+        .cost-sub { font-size: 1rem; color: #1e40af; font-weight: 700; margin-top: 5px; }
 
-        .detail-table { width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .detail-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
         .detail-table th {
-            background: #0b1230; color: white; padding: 7px;
-            text-align: left; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            background: #0a0f2c; color: white; padding: 12px 10px;
+            text-align: left; font-size: 0.85rem; font-weight: 800; text-transform: uppercase;
         }
-        .detail-table td { padding: 6px 7px; border-bottom: 1px solid #e5e7eb; font-size: 0.75rem; }
-        .detail-table tr:hover { background: #F8FAFC; }
+        .detail-table td { 
+            padding: 10px; border-bottom: 1px solid #cbd5e1; 
+            font-size: 0.95rem; color: #1e293b; font-weight: 500;
+        }
+        .detail-table tr:hover { background: #f1f5f9; }
 
-        .category-row { background: rgb(0, 0, 50) !important; font-weight: 800; color: white !important; }
-        .total-row { background: rgb(34, 30, 31) !important; color: white !important; font-weight: 800; }
-        .subtotal-row { background: rgb(220, 230, 235) !important; font-weight: 800; color: rgb(0, 0, 50) !important; }
+        .category-row { 
+            background: #0a0f2c !important; 
+            font-weight: 900; 
+            color: white !important; 
+        }
+        .category-row td { color: white !important; font-size: 1rem !important; }
+        
+        .total-row { 
+            background: #1e293b !important; 
+            color: white !important; 
+            font-weight: 900; 
+        }
+        .total-row td { color: white !important; font-size: 1.05rem !important; }
+        
+        .subtotal-row { 
+            background: #e2e8f0 !important; 
+            font-weight: 800; 
+            color: #0a0f2c !important; 
+        }
+        .subtotal-row td { font-size: 1rem !important; }
 
         .btn-pdf {
-            width: 100%; padding: 14px; background: #3b82f6; color: white;
-            border: none; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 12px;
+            width: 100%; padding: 18px; 
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: white; border: none; border-radius: 8px; 
+            font-weight: 800; cursor: pointer; margin-top: 15px;
+            font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;
         }
-        .btn-pdf:hover { background: #2563eb; }
+        .btn-pdf:hover { 
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        }
 
         .hidden { display: none; }
 
         .logo-upload-section {
-            background: #fff3cd; border-left: 4px solid #ffc107; padding: 8px;
-            margin: 10px 0; font-size: 0.65rem; color: #856404; line-height: 1.3;
+            background: #fef3c7; border-left: 5px solid #f59e0b; padding: 12px;
+            margin: 12px 0; font-size: 0.85rem; color: #92400e; line-height: 1.4; font-weight: 600;
         }
-        .logo-upload-section input[type="file"] { margin-top: 5px; font-size: 0.6rem; }
+        .logo-upload-section input[type="file"] { margin-top: 8px; font-size: 0.8rem; }
 
         .condiciones-box {
-            background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 10px; margin: 12px 0;
+            background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 15px; margin: 18px 0;
         }
-        .condiciones-box h4 { color: #92400e; font-size: 0.75rem; margin-bottom: 6px; text-transform: uppercase; }
+        .condiciones-box h4 { color: #92400e; font-size: 1rem; margin-bottom: 10px; text-transform: uppercase; font-weight: 800; }
         .condiciones-box ul { list-style: none; padding: 0; }
         .condiciones-box li {
-            font-size: 0.7rem; color: #78350f; padding: 4px 0;
-            border-bottom: 1px dashed #fcd34d; display: flex; align-items: flex-start;
+            font-size: 0.9rem; color: #78350f; padding: 6px 0;
+            border-bottom: 1px dashed #fbbf24; display: flex; align-items: flex-start; font-weight: 600;
         }
         .condiciones-box li:last-child { border-bottom: none; }
-        .condiciones-box li::before { content: "•"; color: #f59e0b; font-weight: bold; margin-right: 6px; }
+        .condiciones-box li::before { content: "•"; color: #f59e0b; font-weight: bold; margin-right: 8px; font-size: 1.2rem; }
         .condiciones-box .nota {
-            margin-top: 8px; padding-top: 6px; border-top: 1px solid #f59e0b;
-            font-size: 0.65rem; color: #92400e; font-style: italic;
+            margin-top: 12px; padding-top: 10px; border-top: 2px solid #f59e0b;
+            font-size: 0.85rem; color: #92400e; font-style: italic; font-weight: 600;
         }
 
-        .flujo-section { margin-top: 15px; border-top: 2px solid #3b82f6; padding-top: 12px; }
-        .flujo-section h3 { color: var(--primary); font-size: 0.9rem; margin-bottom: 10px; }
+        .flujo-section { margin-top: 20px; border-top: 3px solid #2563eb; padding-top: 18px; }
+        .flujo-section h3 { color: #0a0f2c; font-size: 1.2rem; margin-bottom: 15px; font-weight: 800; }
         .flujo-wrapper { overflow-x: auto; }
-        .flujo-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; }
+        .flujo-table { width: 100%; border-collapse: collapse; }
         .flujo-table th {
-            background: #1e3a8a; color: white; padding: 5px 3px;
-            text-align: center; font-size: 0.6rem; white-space: nowrap;
+            background: #1e3a8a; color: white; padding: 8px 5px;
+            text-align: center; font-size: 0.8rem; white-space: nowrap; font-weight: 700;
         }
         .flujo-table td {
-            padding: 4px 3px; border: 1px solid #e5e7eb;
-            text-align: right; font-size: 0.6rem; white-space: nowrap;
+            padding: 7px 5px; border: 1px solid #cbd5e1;
+            text-align: right; font-size: 0.8rem; white-space: nowrap; font-weight: 600; color: #1e293b;
         }
         .flujo-table .row-label {
-            background: #f1f5f9; font-weight: 700; text-align: left;
-            position: sticky; left: 0; min-width: 70px;
+            background: #e2e8f0; font-weight: 800; text-align: left;
+            position: sticky; left: 0; min-width: 80px; color: #0a0f2c;
         }
-        .flujo-table .total-row-flujo { background: #dbeafe; font-weight: 700; }
-        .flujo-table .positive { color: #16a34a; }
-        .flujo-table .negative { color: #dc2626; }
+        .flujo-table .total-row-flujo { background: #dbeafe; font-weight: 800; }
+        .flujo-table .positive { color: #15803d; font-weight: 700; }
+        .flujo-table .negative { color: #dc2626; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -192,7 +228,7 @@
         </div>
 
         <div class="logo-upload-section">
-            <strong>⚙️ Logo del Cliente:</strong>
+            <strong>⚙️ Logo del Cliente para PDF:</strong>
             <input type="file" id="logoUpload" accept="image/*" onchange="cargarLogoEmpresa(event)" />
         </div>
 
@@ -301,7 +337,7 @@
                 </p>
             </div>
 
-            <button class="btn-pdf" onclick="exportarPDF()">GENERAR PDF PARA CLIENTE</button>
+            <button class="btn-pdf" onclick="exportarPDF()">📄 GENERAR PDF PARA CLIENTE</button>
         </div>
     </main>
 </div>
@@ -337,13 +373,28 @@
         img.src = url;
     }
 
+    function crearMarcaDeAgua(url, opacidad, callback) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; 
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.globalAlpha = opacidad;
+            ctx.drawImage(img, 0, 0);
+            callback(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => callback(null);
+        img.src = url;
+    }
+
     function calcularFlujo(monto, meses, tasaAnual, frecuenciaInteres, amortizacionCapital, capitalNeto) {
         const flujo = [];
-        const cvvMensual = monto * 0.0003; // 0.03%
+        const cvvMensual = monto * 0.0003;
         const ivaCVV = 0.16;
         const cvvConIVA = cvvMensual * (1 + ivaCVV);
         
-        // Calcular interés por período según frecuencia
         const tasaMensual = tasaAnual / 12;
         let periodoInteres = 1;
         if (frecuenciaInteres === 'Bimestral') periodoInteres = 2;
@@ -351,9 +402,6 @@
         else if (frecuenciaInteres === 'Semestral') periodoInteres = 6;
         else if (frecuenciaInteres === 'Al Vencimiento') periodoInteres = meses;
         
-        const interesPorPago = monto * tasaMensual * periodoInteres;
-        
-        // Amortización de capital
         let amortizacionesCap = [];
         if (amortizacionCapital === 'Al Vencimiento') {
             amortizacionesCap = [{ mes: meses, monto: monto }];
@@ -365,23 +413,14 @@
             }
         }
         
-        // Mes 0: Capital neto recibido
-        flujo.push({
-            mes: 0,
-            capital: capitalNeto,
-            cvv: 0,
-            intereses: 0,
-            total: capitalNeto
-        });
+        flujo.push({ mes: 0, capital: capitalNeto, cvv: 0, intereses: 0, total: capitalNeto });
         
-        // Meses 1 a n
         let capitalPendiente = monto;
         for (let m = 1; m <= meses; m++) {
             let capitalMes = 0;
             let interesesMes = 0;
             let cvvMes = -cvvConIVA;
             
-            // Verificar si hay pago de intereses este mes
             if (frecuenciaInteres === 'Mensual') {
                 interesesMes = -(capitalPendiente * tasaMensual);
             } else if (frecuenciaInteres === 'Al Vencimiento') {
@@ -392,20 +431,13 @@
                 }
             }
             
-            // Verificar amortización de capital
             const amort = amortizacionesCap.find(a => a.mes === m);
             if (amort) {
                 capitalMes = -amort.monto;
                 capitalPendiente -= amort.monto;
             }
             
-            flujo.push({
-                mes: m,
-                capital: capitalMes,
-                cvv: cvvMes,
-                intereses: interesesMes,
-                total: capitalMes + cvvMes + interesesMes
-            });
+            flujo.push({ mes: m, capital: capitalMes, cvv: cvvMes, intereses: interesesMes, total: capitalMes + cvvMes + interesesMes });
         }
         
         return flujo;
@@ -424,11 +456,8 @@
         const tasaRepresentacion = parseFloat(document.getElementById('tasaRepresentacion').value) / 100;
 
         const meses = Math.ceil(plazo / 30);
-        
-        // Cálculo de intereses totales
         const interesesTotales = monto * tasa * (plazo / 360);
         
-        // Costos
         const tasaRegSUNAVAL = esPyme ? 0 : 0.02;
         const registroNacional = monto * tasaRegSUNAVAL;
         const contribucionAnual = monto * 0.005;
@@ -442,7 +471,6 @@
         const cvvTotal = (monto * 0.0003) * meses;
         const ivaCVV = cvvTotal * 0.16;
 
-        // Total de costos (sin intereses, sin CVV mensual para el cálculo del capital neto)
         const costosIniciales = registroNacional + contribucionAnual + calificacionRiesgo + 
                                estructuracion + colocacion + representacion + 
                                publicacionAviso + bvcc + inscripcionISIN;
@@ -450,8 +478,6 @@
         const totalComisiones = costosIniciales + cvvTotal + ivaCVV;
         const costoTotalEmision = totalComisiones + interesesTotales;
         const costoFinanciamientoPct = (costoTotalEmision / monto) * 100;
-        
-        // Capital neto que recibe el emisor en mes 0
         const capitalNeto = monto - costosIniciales;
 
         d = {
@@ -466,7 +492,6 @@
             totalComisiones, costoTotalEmision, costoFinanciamientoPct, capitalNeto, costosIniciales
         };
 
-        // Calcular flujo de caja
         flujoData = calcularFlujo(monto, meses, tasa, frecuenciaInteres, amortizacionCapital, capitalNeto);
 
         document.getElementById('emptyState').classList.add('hidden');
@@ -475,7 +500,6 @@
         document.getElementById('valCostoTotal').innerText = formatUSD(costoTotalEmision);
         document.getElementById('valCostoPct').innerText = costoFinanciamientoPct.toFixed(2) + "% sobre capital";
 
-        // Tabla de costos
         let registroRow = '';
         if (!esPyme) {
             registroRow = `<tr><td>Registro Nacional SUNAVAL</td><td>${formatPct(d.tasaRegSUNAVAL)}</td><td style="text-align:right">${formatUSD(d.registroNacional)}</td></tr>`;
@@ -500,11 +524,10 @@
                     <tr class="subtotal-row"><td colspan="2">TOTAL COMISIONES Y GASTOS</td><td style="text-align:right">${formatUSD(d.totalComisiones)}</td></tr>
                     <tr><td>Intereses Totales Proyectados</td><td>${d.tasa.toFixed(2)}% anual</td><td style="text-align:right">${formatUSD(d.interesesTotales)}</td></tr>
                     <tr class="total-row"><td colspan="2">COSTO TOTAL DE FINANCIAMIENTO</td><td style="text-align:right">${formatUSD(d.costoTotalEmision)}</td></tr>
-                    <tr style="background:#dcfce7;"><td colspan="2" style="font-weight:700;color:#166534;">% COSTO TOTAL DE FINANCIAMIENTO</td><td style="text-align:right;color:#166534;font-size:1rem;font-weight:700;">${d.costoFinanciamientoPct.toFixed(2)}%</td></tr>
+                    <tr style="background:#bbf7d0;"><td colspan="2" style="font-weight:800;color:#166534;font-size:1.05rem;">% COSTO TOTAL DE FINANCIAMIENTO</td><td style="text-align:right;color:#166534;font-size:1.2rem;font-weight:900;">${d.costoFinanciamientoPct.toFixed(2)}%</td></tr>
                 </tbody>
             </table>`;
 
-        // Tabla de flujo
         renderizarTablaFlujo();
     }
 
@@ -519,22 +542,18 @@
             return `<td class="${cls} ${isTotal ? 'total-row-flujo' : ''}">${formatUSD(val)}</td>`;
         };
 
-        // Fila Capital
         html += '<tr><td class="row-label">Capital</td>';
         flujoData.forEach(f => html += formatCell(f.capital));
         html += '</tr>';
 
-        // Fila CVV
         html += '<tr><td class="row-label">CVV</td>';
         flujoData.forEach(f => html += formatCell(f.cvv));
         html += '</tr>';
 
-        // Fila Intereses
         html += '<tr><td class="row-label">Intereses</td>';
         flujoData.forEach(f => html += formatCell(f.intereses));
         html += '</tr>';
 
-        // Fila Total
         html += '<tr><td class="row-label total-row-flujo">Total</td>';
         flujoData.forEach(f => html += formatCell(f.total, true));
         html += '</tr>';
@@ -554,16 +573,16 @@
             if (LOGO_EMPRESA_BASE64) try { doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 30, y, 30, 8); } catch(e) {}
 
             y += 12;
-            doc.setTextColor(0, 0, 50); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+            doc.setTextColor(10, 15, 44); doc.setFontSize(13); doc.setFont("helvetica", "bold");
             doc.text("PRESUPUESTO DE EMISIÓN - PAPELES COMERCIALES", pageWidth / 2, y, {align: 'center'});
 
             y += 5;
-            doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(130, 130, 130);
+            doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
             doc.text(new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'}), pageWidth - margin, y, {align: 'right'});
 
             y += 4;
-            doc.setFillColor(240, 243, 245); doc.rect(margin, y, pageWidth - margin*2, 7, 'F');
-            doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 0, 50);
+            doc.setFillColor(226, 232, 240); doc.rect(margin, y, pageWidth - margin*2, 7, 'F');
+            doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(10, 15, 44);
             doc.text(d.empresa, margin + 3, y + 5);
 
             y += 10;
@@ -579,8 +598,8 @@
                     ['Tipo Emisor', d.tipoEmisorTexto]
                 ],
                 theme: 'grid',
-                headStyles: { fillColor: [0, 0, 50], fontSize: 6.5, cellPadding: 1.2 },
-                bodyStyles: { fontSize: 6, cellPadding: 1.2 },
+                headStyles: { fillColor: [10, 15, 44], fontSize: 7, cellPadding: 1.5, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 7, cellPadding: 1.5, textColor: [30, 41, 59] },
                 columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
                 margin: { left: margin, right: margin }
             });
@@ -600,10 +619,10 @@
                 ['Inscripción Código ISIN (CVV)', 'S/ Plazo', formatUSD(d.inscripcionISIN)],
                 ['Custodia Caja de Valores (CVV)', '0.03% mensual', formatUSD(d.cvvTotal)],
                 ['IVA sobre CVV', '16%', formatUSD(d.ivaCVV)],
-                [{content: 'TOTAL COMISIONES Y GASTOS', styles: {fillColor: [220, 230, 235], fontStyle: 'bold'}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [220, 230, 235], fontStyle: 'bold', halign: 'right'}}],
+                [{content: 'TOTAL COMISIONES Y GASTOS', styles: {fillColor: [226, 232, 240], fontStyle: 'bold', textColor: [10, 15, 44]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [226, 232, 240], fontStyle: 'bold', halign: 'right', textColor: [10, 15, 44]}}],
                 ['Intereses Totales Proyectados', d.tasa.toFixed(2)+'%', formatUSD(d.interesesTotales)],
-                [{content: 'COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [0, 0, 50], textColor: 255, fontStyle: 'bold'}}, '', {content: formatUSD(d.costoTotalEmision), styles: {fillColor: [0, 0, 50], textColor: 255, fontStyle: 'bold', halign: 'right'}}],
-                [{content: '% COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [220, 252, 231], textColor: [22, 101, 52], fontStyle: 'bold'}}, '', {content: d.costoFinanciamientoPct.toFixed(2) + '%', styles: {fillColor: [220, 252, 231], textColor: [22, 101, 52], fontStyle: 'bold', halign: 'right'}}]
+                [{content: 'COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [10, 15, 44], textColor: 255, fontStyle: 'bold'}}, '', {content: formatUSD(d.costoTotalEmision), styles: {fillColor: [10, 15, 44], textColor: 255, fontStyle: 'bold', halign: 'right'}}],
+                [{content: '% COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [187, 247, 208], textColor: [22, 101, 52], fontStyle: 'bold'}}, '', {content: d.costoFinanciamientoPct.toFixed(2) + '%', styles: {fillColor: [187, 247, 208], textColor: [22, 101, 52], fontStyle: 'bold', halign: 'right'}}]
             ]);
             
             doc.autoTable({
@@ -611,15 +630,14 @@
                 head: [['CONCEPTO', 'TASA/BASE', 'MONTO USD']],
                 body: bodyData,
                 theme: 'grid',
-                headStyles: { fillColor: [0, 0, 50], fontSize: 6.5, cellPadding: 1.2 },
-                bodyStyles: { fontSize: 6, cellPadding: 1 },
+                headStyles: { fillColor: [10, 15, 44], fontSize: 7, cellPadding: 1.5, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 6.5, cellPadding: 1.2, textColor: [30, 41, 59] },
                 columnStyles: { 2: { halign: 'right', fontStyle: 'bold' } },
                 margin: { left: margin, right: margin }
             });
 
-            // FLUJO DE CAJA
             y = doc.lastAutoTable.finalY + 4;
-            doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 0, 50);
+            doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(10, 15, 44);
             doc.text("FLUJO DE CAJA DEL EMISOR", margin, y);
             y += 3;
 
@@ -636,8 +654,8 @@
                 head: flujoHead,
                 body: flujoBody,
                 theme: 'grid',
-                headStyles: { fillColor: [30, 58, 138], fontSize: 5, cellPadding: 0.8, halign: 'center' },
-                bodyStyles: { fontSize: 4.5, cellPadding: 0.8, halign: 'right' },
+                headStyles: { fillColor: [30, 58, 138], fontSize: 5.5, cellPadding: 1, halign: 'center', fontStyle: 'bold' },
+                bodyStyles: { fontSize: 5, cellPadding: 1, halign: 'right', textColor: [30, 41, 59] },
                 columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 14 } },
                 margin: { left: margin, right: margin },
                 didParseCell: function(data) {
@@ -648,56 +666,38 @@
                 }
             });
 
-            // CONDICIONES
             y = doc.lastAutoTable.finalY + 4;
             doc.setFillColor(254, 243, 199);
-            doc.rect(margin, y, pageWidth - margin*2, 26, 'F');
+            doc.rect(margin, y, pageWidth - margin*2, 28, 'F');
             doc.setDrawColor(245, 158, 11);
-            doc.rect(margin, y, pageWidth - margin*2, 26, 'S');
+            doc.setLineWidth(0.5);
+            doc.rect(margin, y, pageWidth - margin*2, 28, 'S');
             
-            y += 4;
-            doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(146, 64, 14);
-            doc.text("CONDICIONES DE PAGO", margin + 2, y);
+            y += 5;
+            doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(146, 64, 14);
+            doc.text("CONDICIONES DE PAGO", margin + 3, y);
             
-            y += 4;
-            doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(120, 53, 15);
+            y += 5;
+            doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(120, 53, 15);
             const conds = [
                 "• Pago de 50% de la comisión de estructuración para inicio del proceso",
                 "• Pago del 50% restante de honorarios de estructuración contra autorización SUNAVAL",
                 "• Pago del 100% de la comisión de colocación y representación según monto efectivamente colocado"
             ];
-            conds.forEach(c => { doc.text(c, margin + 2, y); y += 3.5; });
+            conds.forEach(c => { doc.text(c, margin + 3, y); y += 4; });
             
             y += 1;
-            doc.setFontSize(5.5); doc.setFont("helvetica", "italic");
-            doc.text("Nota: Los montos son estimados y pueden variar. Para mayor información, contactar a Per Capital.", margin + 2, y);
+            doc.setFontSize(6); doc.setFont("helvetica", "italic");
+            doc.text("Nota: Los montos son estimados y pueden variar. Para mayor información, contactar a Per Capital.", margin + 3, y);
 
             // MARCA DE AGUA
             crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.07, function(wmBase64) {
                 if (wmBase64) {
-                    try { 
-                        doc.addImage(wmBase64, 'PNG', (pageWidth - 70) / 2, 120, 70, 20); 
-                    } catch(e) {}
+                    try { doc.addImage(wmBase64, 'PNG', (pageWidth - 70) / 2, 115, 70, 20); } catch(e) {}
                 }
                 doc.save(`Presupuesto_PC_${d.empresa}.pdf`);
             });
         });
-    }
-
-    function crearMarcaDeAgua(url, opacidad, callback) {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; 
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.globalAlpha = opacidad;
-            ctx.drawImage(img, 0, 0);
-            callback(canvas.toDataURL('image/png'));
-        };
-        img.onerror = () => callback(null);
-        img.src = url;
     }
 </script>
 </body>
