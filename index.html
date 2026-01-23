@@ -585,12 +585,12 @@
             // ====== MARCA DE AGUA - LOGO PER CAPITAL SEMI-TRANSPARENTE ======
             // Se dibuja ANTES del contenido para que quede detrás
             try {
-                // Configurar opacidad para la marca de agua
-                doc.setGState(new doc.GState({opacity: 0.15})); // Aumentado de 0.08 a 0.15 para mejor visibilidad
+                // Configurar opacidad para la marca de agua (MÁS VISIBLE)
+                doc.setGState(new doc.GState({opacity: 0.25})); // Aumentado a 0.25 para mayor visibilidad
 
                 // Logo grande centrado como marca de agua
-                const watermarkWidth = 100;
-                const watermarkHeight = 30; // Altura proporcional al logo horizontal
+                const watermarkWidth = 110;
+                const watermarkHeight = 33; // Altura proporcional al logo horizontal
                 const watermarkX = (pageWidth - watermarkWidth) / 2;
                 const watermarkY = (pageHeight - watermarkHeight) / 2 + 20; // Centrado verticalmente
 
@@ -619,7 +619,7 @@
                 }
             }
 
-            yPos += 18;
+            yPos += 25;
 
             // TÍTULO PRINCIPAL - CENTRADO (Color: R:0 G:0 B:50)
             doc.setTextColor(0, 0, 50);
