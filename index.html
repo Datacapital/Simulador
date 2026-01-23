@@ -705,31 +705,23 @@
             startY: yPos,
             head: [['CONCEPTO', 'TASA / BASE', 'MONTO USD']],
             body: [
-                [{content: 'TASAS REGULATORIAS SUNAVAL', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
-                ['Registro Nacional SUNAVAL', formatPct(d.tasaRegSUNAVAL) + ' del monto', formatUSD(d.registroNacional)],
-                ['Contribución Especial Anual', '0.50% del monto', formatUSD(d.contribucionAnual)],
-
-                [{content: 'CALIFICACIÓN DE RIESGO', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
-                ['Calificación de Riesgo', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
-
-                [{content: 'COMISIONES PER CAPITAL', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
-                ['Estructuración Legal', formatPct(d.tasaEstructuracion) + ' del monto', formatUSD(d.estructuracion)],
-                ['Colocación en Mercado', formatPct(d.tasaColocacionAplicada) + ' del monto', formatUSD(d.colocacion)],
-
-                [{content: 'OTROS GASTOS DEL MERCADO', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
-                ['Representación Tenedores', '0.25% del monto', formatUSD(d.representacion)],
-                ['Publicación Aviso', 'Plana', formatUSD(d.publicacionAviso)],
-                ['Bolsa de Valores (BVCC)', '0.50% del monto', formatUSD(d.bvcc)],
-                ['Inscripción ISIN', 'S/plazo', formatUSD(d.inscripcionISIN)],
-                ['Custodia CVV', '0.03%/mes', formatUSD(d.cvvTotal)],
-                ['IVA sobre CVV', '16%', formatUSD(d.iva)],
+                ['Registro Nacional SUNAVAL:', formatPct(d.tasaRegSUNAVAL) + ' del monto', formatUSD(d.registroNacional)],
+                ['Contribución Especial Anual:', '0.50% del monto', formatUSD(d.contribucionAnual)],
+                ['Calificación de Riesgo:', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
+                ['Estructuración Legal:', formatPct(d.tasaEstructuracion) + ' del monto', formatUSD(d.estructuracion)],
+                ['Colocación en Mercado:', formatPct(d.tasaColocacionAplicada) + ' del monto', formatUSD(d.colocacion)],
+                ['Representación Tenedores:', '0.25% del monto', formatUSD(d.representacion)],
+                ['Publicación Aviso:', 'Plana', formatUSD(d.publicacionAviso)],
+                ['Bolsa de Valores (BVCC):', '0.50% del monto', formatUSD(d.bvcc)],
+                ['Inscripción ISIN:', 'S/plazo', formatUSD(d.inscripcionISIN)],
+                ['Custodia CVV:', '0.03%/mes', formatUSD(d.cvvTotal)],
+                ['IVA sobre CVV:', '16%', formatUSD(d.iva)],
 
                 [{content: 'TOTAL COMISIONES', styles: {fillColor: [220, 230, 235], fontStyle: 'bold', fontSize: 7, textColor: [0, 0, 50]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [220, 230, 235], fontStyle: 'bold', fontSize: 7, textColor: [0, 0, 50]}}],
 
-                [{content: 'PROYECCIÓN DE INTERESES', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
-                ['Intereses Totales', formatPct(d.tasa) + ' anual', formatUSD(d.interesesTotales)],
+                ['Intereses Totales:', formatPct(d.tasa) + ' anual', formatUSD(d.interesesTotales)],
 
-                [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [34, 30, 31], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}, '', {content: formatUSD(d.costoTotalEmision) + ' (' + pctTotal + '%)', styles: {fillColor: [34, 30, 31], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}]
+                [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [0, 0, 50], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}, '', {content: formatUSD(d.costoTotalEmision) + ' (' + pctTotal + '%)', styles: {fillColor: [0, 0, 50], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}]
             ],
             theme: 'grid',
             headStyles: {
