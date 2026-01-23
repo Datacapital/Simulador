@@ -514,7 +514,7 @@
             });
 
             crearMarcaDeAgua(LOGO_MARCA_AGUA_URL, 0.08, function(wmBase64) {
-                try { doc.addImage(wmBase64, 'PNG', (pageWidth - 90) / 2, 170, 90, 25); } catch (e) {}
+                try { doc.addImage(wmBase64, 'PNG', (pageWidth - 90) / 2, 110, 90, 25); } catch (e) {}
                 doc.save(`Presupuesto_${d.empresa}.pdf`);
             });
         });
