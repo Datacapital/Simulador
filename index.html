@@ -648,19 +648,14 @@
 
             // NOMBRE DE LA EMPRESA - Caja con fondo gris azulado suave
             doc.setFillColor(240, 243, 245);
-            doc.rect(margin, yPos - 4, contentWidth, 12, 'F');
+            doc.rect(margin, yPos - 4, contentWidth, 10, 'F');
 
             doc.setFontSize(13);
             doc.setFont("helvetica", "bold");
             doc.setTextColor(0, 0, 50);
             doc.text(d.empresa, margin + 4, yPos + 2);
 
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(133, 157, 169);
-            doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin + 4, yPos + 7);
-
-            yPos += 16;
+            yPos += 12;
 
             // TABLA DE CARACTERÍSTICAS - Diseño corporativo con colores de marca
             doc.autoTable({
