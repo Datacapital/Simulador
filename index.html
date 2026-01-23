@@ -172,21 +172,21 @@
         .detail-table .value { font-weight: 700; color: var(--primary); text-align: right; }
 
         .category-row {
-            background: #2d3748 !important;
+            background: rgb(0, 0, 50) !important;
             font-weight: 800;
             color: white !important;
         }
 
         .total-row {
-            background: #0f172a !important;
+            background: rgb(34, 30, 31) !important;
             color: white !important;
             font-weight: 800;
         }
 
         .subtotal-row {
-            background: #cbd5e1 !important;
+            background: rgb(220, 230, 235) !important;
             font-weight: 800;
-            color: #0f172a !important;
+            color: rgb(0, 0, 50) !important;
         }
 
         .btn-pdf {
@@ -582,6 +582,40 @@
         // Convertir logo de Per Capital y generar PDF
         convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerCapitalBase64) {
 
+            // ====== MARCA DE AGUA - LOGO PER CAPITAL SEMI-TRANSPARENTE ======
+            doc.saveGraphicsState();
+            doc.setGState(new doc.GState({opacity: 0.08}));
+            try {
+                // Logo grande centrado como marca de agua
+                const watermarkSize = 120;
+                const watermarkX = (pageWidth - watermarkSize) / 2;
+                const watermarkY = (pageHeight - watermarkSize * 0.3) / 2;
+                doc.addImage(logoPerCapitalBase64, 'PNG', watermarkX, watermarkY, watermarkSize, watermarkSize * 0.3);
+            } catch (error) {
+                console.error('Error al agregar marca de agua:', error);
+            }
+            doc.restoreGraphicsState();
+
+            // ====== LÍNEAS DECORATIVAS SEMI-TRANSPARENTES ======
+            doc.saveGraphicsState();
+            doc.setGState(new doc.GState({opacity: 0.12}));
+            doc.setDrawColor(0, 0, 50);
+            doc.setLineWidth(0.3);
+
+            // Líneas diagonales en las esquinas
+            // Esquina superior izquierda
+            for (let i = 0; i < 5; i++) {
+                doc.line(margin + i*8, margin, margin + 40 + i*8, margin + 40);
+            }
+
+            // Esquina inferior derecha
+            for (let i = 0; i < 5; i++) {
+                doc.line(pageWidth - margin - 40 - i*8, pageHeight - margin - 40, pageWidth - margin - i*8, pageHeight - margin);
+            }
+
+            doc.restoreGraphicsState();
+
+            // ====== LOGOS PRINCIPALES ======
             // LOGO PER CAPITAL - Posición superior IZQUIERDA
             try {
                 doc.addImage(logoPerCapitalBase64, 'PNG', margin, yPos, 40, 12);
@@ -600,48 +634,48 @@
 
             yPos += 18;
 
-            // TÍTULO PRINCIPAL - CENTRADO Y MÁS GRANDE
-            doc.setTextColor(15, 23, 42);
+            // TÍTULO PRINCIPAL - CENTRADO (Color: R:0 G:0 B:50)
+            doc.setTextColor(0, 0, 50);
             doc.setFontSize(18);
             doc.setFont("helvetica", "bold");
             doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth / 2, yPos, {align: 'center'});
 
             yPos += 7;
 
-            // FECHA Y LUGAR - Derecha, debajo del título
+            // FECHA Y LUGAR - Derecha (Color: R:133 G:157 B:169)
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
-            doc.setTextColor(71, 85, 105);
+            doc.setTextColor(133, 157, 169);
             const fecha = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
             doc.text(fecha, pageWidth - margin, yPos, {align: 'right'});
             doc.text("Caracas, Venezuela", pageWidth - margin, yPos + 4, {align: 'right'});
 
             yPos += 10;
 
-            // Línea separadora gruesa y elegante
-            doc.setDrawColor(71, 85, 105);
+            // Línea separadora (Color: R:0 G:0 B:50)
+            doc.setDrawColor(0, 0, 50);
             doc.setLineWidth(0.8);
             doc.line(margin, yPos, pageWidth - margin, yPos);
 
             yPos += 10;
 
-            // NOMBRE DE LA EMPRESA - Caja con fondo gris claro
-            doc.setFillColor(248, 250, 252);
+            // NOMBRE DE LA EMPRESA - Caja con fondo gris azulado suave
+            doc.setFillColor(240, 243, 245);
             doc.rect(margin, yPos - 4, contentWidth, 12, 'F');
 
             doc.setFontSize(13);
             doc.setFont("helvetica", "bold");
-            doc.setTextColor(15, 23, 42);
+            doc.setTextColor(0, 0, 50);
             doc.text(d.empresa, margin + 4, yPos + 2);
 
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
-            doc.setTextColor(100, 116, 139);
+            doc.setTextColor(133, 157, 169);
             doc.text("Tipo de Emisor: " + d.tipoEmisorTexto, margin + 4, yPos + 7);
 
             yPos += 16;
 
-            // TABLA DE CARACTERÍSTICAS - Diseño corporativo
+            // TABLA DE CARACTERÍSTICAS - Diseño corporativo con colores de marca
             doc.autoTable({
             startY: yPos,
             head: [['CARACTERÍSTICAS DE LA EMISIÓN', 'VALOR']],
@@ -654,7 +688,7 @@
             ],
             theme: 'grid',
             headStyles: {
-                fillColor: [15, 23, 42],
+                fillColor: [0, 0, 50],
                 fontSize: 8,
                 fontStyle: 'bold',
                 cellPadding: 2.5,
@@ -663,13 +697,13 @@
             bodyStyles: {
                 fontSize: 8,
                 cellPadding: 2.5,
-                lineColor: [226, 232, 240],
+                lineColor: [133, 157, 169],
                 lineWidth: 0.2,
-                textColor: [51, 65, 85]
+                textColor: [34, 30, 31]
             },
             columnStyles: {
-                0: { cellWidth: contentWidth * 0.65, fontStyle: 'bold', textColor: [30, 41, 59] },
-                1: { cellWidth: contentWidth * 0.35, halign: 'right', fontStyle: 'bold', textColor: [15, 23, 42] }
+                0: { cellWidth: contentWidth * 0.65, fontStyle: 'bold', textColor: [0, 0, 50] },
+                1: { cellWidth: contentWidth * 0.35, halign: 'right', fontStyle: 'bold', textColor: [0, 0, 50] }
             },
             margin: { left: margin, right: margin },
             tableWidth: contentWidth,
@@ -680,25 +714,25 @@
 
             yPos = doc.lastAutoTable.finalY + 6;
 
-            // TABLA DE COSTOS - Diseño MEGA CORPORATIVO Y PROFESIONAL
+            // TABLA DE COSTOS - Diseño MEGA CORPORATIVO con colores de marca
             const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
 
             doc.autoTable({
             startY: yPos,
             head: [['CONCEPTO', 'TASA / BASE', 'MONTO USD']],
             body: [
-                [{content: 'TASAS REGULATORIAS SUNAVAL', colSpan: 3, styles: {fillColor: [45, 55, 72], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
+                [{content: 'TASAS REGULATORIAS SUNAVAL', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
                 ['Registro Nacional SUNAVAL', formatPct(d.tasaRegSUNAVAL) + ' del monto', formatUSD(d.registroNacional)],
                 ['Contribución Especial Anual', '0.50% del monto', formatUSD(d.contribucionAnual)],
 
-                [{content: 'CALIFICACIÓN DE RIESGO', colSpan: 3, styles: {fillColor: [45, 55, 72], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
+                [{content: 'CALIFICACIÓN DE RIESGO', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
                 ['Calificación de Riesgo', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
 
-                [{content: 'COMISIONES PER CAPITAL', colSpan: 3, styles: {fillColor: [45, 55, 72], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
+                [{content: 'COMISIONES PER CAPITAL', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
                 ['Estructuración Legal', formatPct(d.tasaEstructuracion) + ' del monto', formatUSD(d.estructuracion)],
                 ['Colocación en Mercado', formatPct(d.tasaColocacionAplicada) + ' del monto', formatUSD(d.colocacion)],
 
-                [{content: 'OTROS GASTOS DEL MERCADO', colSpan: 3, styles: {fillColor: [45, 55, 72], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
+                [{content: 'OTROS GASTOS DEL MERCADO', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
                 ['Representación Tenedores', '0.25% del monto', formatUSD(d.representacion)],
                 ['Publicación Aviso', 'Plana', formatUSD(d.publicacionAviso)],
                 ['Bolsa de Valores (BVCC)', '0.50% del monto', formatUSD(d.bvcc)],
@@ -706,16 +740,16 @@
                 ['Custodia CVV', '0.03%/mes', formatUSD(d.cvvTotal)],
                 ['IVA sobre CVV', '16%', formatUSD(d.iva)],
 
-                [{content: 'TOTAL COMISIONES', styles: {fillColor: [203, 213, 225], fontStyle: 'bold', fontSize: 7, textColor: [15, 23, 42]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [203, 213, 225], fontStyle: 'bold', fontSize: 7, textColor: [15, 23, 42]}}],
+                [{content: 'TOTAL COMISIONES', styles: {fillColor: [220, 230, 235], fontStyle: 'bold', fontSize: 7, textColor: [0, 0, 50]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [220, 230, 235], fontStyle: 'bold', fontSize: 7, textColor: [0, 0, 50]}}],
 
-                [{content: 'PROYECCIÓN DE INTERESES', colSpan: 3, styles: {fillColor: [45, 55, 72], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
+                [{content: 'PROYECCIÓN DE INTERESES', colSpan: 3, styles: {fillColor: [0, 0, 50], fontStyle: 'bold', fontSize: 7, textColor: [255, 255, 255]}}],
                 ['Intereses Totales', formatPct(d.tasa) + ' anual', formatUSD(d.interesesTotales)],
 
-                [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [15, 23, 42], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}, '', {content: formatUSD(d.costoTotalEmision) + ' (' + pctTotal + '%)', styles: {fillColor: [15, 23, 42], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}]
+                [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [34, 30, 31], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}, '', {content: formatUSD(d.costoTotalEmision) + ' (' + pctTotal + '%)', styles: {fillColor: [34, 30, 31], fontStyle: 'bold', textColor: [255, 255, 255], fontSize: 8}}]
             ],
             theme: 'grid',
             headStyles: {
-                fillColor: [15, 23, 42],
+                fillColor: [0, 0, 50],
                 fontSize: 8,
                 fontStyle: 'bold',
                 cellPadding: 2.5,
@@ -724,14 +758,14 @@
             bodyStyles: {
                 fontSize: 7,
                 cellPadding: 2,
-                lineColor: [226, 232, 240],
+                lineColor: [133, 157, 169],
                 lineWidth: 0.2,
-                textColor: [51, 65, 85]
+                textColor: [34, 30, 31]
             },
             columnStyles: {
                 0: { cellWidth: contentWidth * 0.50 },
-                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 6.5 },
-                2: { cellWidth: contentWidth * 0.25, halign: 'right', fontStyle: 'bold' }
+                1: { cellWidth: contentWidth * 0.25, halign: 'center', fontSize: 6.5, textColor: [133, 157, 169] },
+                2: { cellWidth: contentWidth * 0.25, halign: 'right', fontStyle: 'bold', textColor: [0, 0, 50] }
             },
             margin: { left: margin, right: margin },
             tableWidth: contentWidth,
@@ -740,10 +774,10 @@
             }
             });
 
-            // PIE DE PÁGINA
+            // PIE DE PÁGINA con color corporativo
             yPos = doc.lastAutoTable.finalY + 6;
             doc.setFontSize(7);
-            doc.setTextColor(100, 116, 139);
+            doc.setTextColor(133, 157, 169);
             doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
             doc.save(`Presupuesto_${d.empresa}.pdf`);
