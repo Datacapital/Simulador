@@ -708,7 +708,32 @@
             }
             });
 
-            yPos = doc.lastAutoTable.finalY + 6;
+            yPos = doc.lastAutoTable.finalY + 8;
+
+            // ====== ESPACIO EN BLANCO CON LOGO PER CAPITAL ======
+            // Crear espacio visual de separación con el logo grande
+            const logoSpaceHeight = 40;
+            const logoSpaceY = yPos;
+
+            // Fondo blanco con borde sutil
+            doc.setFillColor(255, 255, 255);
+            doc.setDrawColor(220, 230, 235);
+            doc.setLineWidth(0.3);
+            doc.rect(margin, logoSpaceY, contentWidth, logoSpaceHeight, 'FD');
+
+            // Logo Per Capital grande centrado en el espacio
+            const logoInSpaceWidth = 80;
+            const logoInSpaceHeight = 24;
+            const logoInSpaceX = (pageWidth - logoInSpaceWidth) / 2;
+            const logoInSpaceY = logoSpaceY + (logoSpaceHeight - logoInSpaceHeight) / 2;
+
+            try {
+                doc.addImage(logoPerCapitalBase64, 'PNG', logoInSpaceX, logoInSpaceY, logoInSpaceWidth, logoInSpaceHeight);
+            } catch (error) {
+                console.error('Error al agregar logo en espacio:', error);
+            }
+
+            yPos = logoSpaceY + logoSpaceHeight + 8;
 
             // TABLA DE COSTOS - Diseño MEGA CORPORATIVO con colores de marca
             const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
@@ -776,25 +801,8 @@
             doc.setTextColor(133, 157, 169);
             doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fecha, margin, yPos);
 
-            // ====== MARCA DE AGUA - DIBUJAR AL FINAL ENCIMA DE TODO ======
-            // Crear versión semi-transparente del logo para marca de agua
-            crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.25, function(marcaDeAguaBase64) {
-                try {
-                    // Logo grande centrado como marca de agua
-                    const watermarkWidth = 110;
-                    const watermarkHeight = 33;
-                    const watermarkX = (pageWidth - watermarkWidth) / 2;
-                    const watermarkY = (pageHeight - watermarkHeight) / 2 + 15;
-
-                    // Dibujar marca de agua encima de todo el contenido
-                    doc.addImage(marcaDeAguaBase64, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
-                } catch (error) {
-                    console.error('Error al agregar marca de agua:', error);
-                }
-
-                // Guardar PDF
-                doc.save(`Presupuesto_${d.empresa}.pdf`);
-            }); // Cierre de crearMarcaDeAgua
+            // Guardar PDF
+            doc.save(`Presupuesto_${d.empresa}.pdf`);
         }); // Cierre de convertirImagenABase64
     }
 </script>
