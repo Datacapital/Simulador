@@ -19,64 +19,235 @@
             --border: #1e3a8a;
             --success: #3b82f6;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #071031; color: var(--text); padding: 20px; }
-        .app-container { max-width: 1400px; margin: 0 auto; background: var(--card); border-radius: 12px; box-shadow: 0 20px 50px rgba(59,130,246,0.15); display: grid; grid-template-columns: 450px 1fr; min-height: 90vh; overflow: hidden; border: 1px solid #1e3a8a; }
-        .sidebar { background: #F8FAFC; padding: 30px 25px; border-right: 1px solid #1e3a8a; overflow-y: auto; max-height: 90vh; }
-        .brand-header { margin-bottom: 25px; }
-        .brand-header h1 { color: var(--primary); font-weight: 800; font-size: 1.3rem; letter-spacing: -0.5px; border-left: 4px solid #3b82f6; padding-left: 15px; }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(59,130,246,0.15);
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            min-height: 90vh;
+            overflow: hidden;
+            border: 1px solid #1e3a8a;
+        }
+
+        .sidebar {
+            background: #F8FAFC;
+            padding: 30px 25px;
+            border-right: 1px solid #1e3a8a;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        .brand-header {
+            margin-bottom: 25px;
+        }
+        .brand-header h1 {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 15px;
+        }
         .brand-header p { font-size: 0.7rem; color: var(--secondary); margin-top: 5px; padding-left: 19px; }
-        .section-title { font-size: 0.65rem; font-weight: 800; color: #3b82f6; text-transform: uppercase; margin: 20px 0 12px 0; letter-spacing: 1px; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; }
+
+        .section-title {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #3b82f6;
+            text-transform: uppercase;
+            margin: 20px 0 12px 0;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 5px;
+        }
+
         .form-group { margin-bottom: 14px; }
-        label { display: block; font-size: 0.65rem; font-weight: 700; color: var(--secondary); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; background: white; transition: all 0.2s; color: var(--primary); font-weight: 500; }
-        input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-main { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 20px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; transition: 0.3s; }
+        label {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+            transition: all 0.2s;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
         .btn-main:hover { background: #1e293b; transform: translateY(-1px); }
+
         .main-content { padding: 40px; background: white; overflow-y: auto; max-height: 90vh; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--secondary); text-align: center; }
-        .summary-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 2px solid #dbeafe; padding-bottom: 20px; }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--secondary);
+            text-align: center;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #dbeafe;
+            padding-bottom: 20px;
+        }
         .summary-title-area h2 { font-size: 1.6rem; color: var(--primary); font-weight: 800; }
         .summary-title-area p { color: var(--secondary); font-size: 0.9rem; margin-top: 5px; }
+
         .cost-hero { text-align: right; }
         .cost-label { font-size: 0.7rem; font-weight: 700; color: #3b82f6; text-transform: uppercase; }
         .cost-value { font-size: 2.2rem; font-weight: 800; color: var(--primary); line-height: 1; }
         .cost-sub { font-size: 0.9rem; color: var(--secondary); font-weight: 500; margin-top: 5px; }
-        .detail-table { width: 100%; margin-bottom: 25px; border-collapse: collapse; }
-        .detail-table th { background: #0b1230; color: white; padding: 10px; text-align: left; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .detail-table td { padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.85rem; }
-        .detail-table tr:hover { background: #F8FAFC; }
+
+        .detail-table {
+            width: 100%;
+            margin-bottom: 25px;
+            border-collapse: collapse;
+        }
+        .detail-table th {
+            background: #0b1230;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .detail-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+        }
+        .detail-table tr:hover {
+            background: #F8FAFC;
+        }
         .detail-table .label { color: var(--secondary); }
         .detail-table .value { font-weight: 700; color: var(--primary); text-align: right; }
-        .category-row { background: rgb(0, 0, 50) !important; font-weight: 800; color: white !important; }
-        .total-row { background: rgb(34, 30, 31) !important; color: white !important; font-weight: 800; }
-        .subtotal-row { background: rgb(220, 230, 235) !important; font-weight: 800; color: rgb(0, 0, 50) !important; }
-        .btn-pdf { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+
+        .category-row {
+            background: rgb(0, 0, 50) !important;
+            font-weight: 800;
+            color: white !important;
+        }
+
+        .total-row {
+            background: rgb(34, 30, 31) !important;
+            color: white !important;
+            font-weight: 800;
+        }
+
+        .subtotal-row {
+            background: rgb(220, 230, 235) !important;
+            font-weight: 800;
+            color: rgb(0, 0, 50) !important;
+        }
+
+        .btn-pdf {
+            width: 100%;
+            padding: 18px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
         .btn-pdf:hover { background: #2563eb; }
+
         .hidden { display: none; }
-        .info-note { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px; margin: 15px 0; font-size: 0.75rem; color: #0b1230; line-height: 1.5; }
-        .logo-upload-section { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 15px 0; font-size: 0.75rem; color: #856404; line-height: 1.5; }
-        .logo-upload-section input[type="file"] { margin-top: 8px; font-size: 0.7rem; padding: 5px; }
+
+        .info-note {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 0.75rem;
+            color: #0b1230;
+            line-height: 1.5;
+        }
+
+        .logo-upload-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 0.75rem;
+            color: #856404;
+            line-height: 1.5;
+        }
+
+        .logo-upload-section input[type="file"] {
+            margin-top: 8px;
+            font-size: 0.7rem;
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
+
 <div class="app-container">
     <aside class="sidebar">
         <div class="brand-header">
             <h1>PER CAPITAL</h1>
             <p>PRESUPUESTO PARA CLIENTE</p>
         </div>
+
         <div class="logo-upload-section">
             <strong>⚙️ Cargar Logo del Cliente para PDF:</strong><br>
-            Selecciona el logo de la empresa emisora (PNG/JPG, recomendado 200x60px). Aparecerá en la esquina superior derecha del PDF.
+            Selecciona el logo de la empresa emisora.
             <input type="file" id="logoUpload" accept="image/*" onchange="cargarLogoEmpresa(event)" />
         </div>
+
         <div class="section-title">DATOS DEL CLIENTE</div>
+
         <div class="form-group">
             <label>Nombre del Emisor</label>
             <input type="text" id="nombre" placeholder="Nombre de la empresa" value="Corporación Éxito, S.A." />
         </div>
+
         <div class="form-group">
             <label>Tipo de Emisor</label>
             <select id="tipoEmisor">
@@ -84,7 +255,9 @@
                 <option value="NO">Corporativo (No PYME)</option>
             </select>
         </div>
+
         <div class="section-title">CARACTERÍSTICAS DE LA EMISIÓN</div>
+
         <div class="form-group">
             <label>Monto a Emitir (USD)</label>
             <input type="number" id="monto" value="1000000" />
@@ -114,12 +287,16 @@
                 <option value="Anual">Anual</option>
             </select>
         </div>
+
         <div class="section-title">CALIFICACIÓN DE RIESGO</div>
+
         <div class="form-group">
             <label>Costo Calificación de Riesgo (USD)</label>
             <input type="number" id="calificacionRiesgo" value="1500" step="100" />
         </div>
+
         <div class="section-title">COMISIÓN ESTRUCTURACIÓN Y COLOCACIÓN PER CAPITAL</div>
+
         <div class="form-group">
             <label>Estructuración Legal (%)</label>
             <input type="number" id="tasaEstructuracion" value="2.0" step="0.1" />
@@ -134,19 +311,13 @@
                 <input type="number" id="tasaColocacionMayor" value="7.5" step="0.01" />
             </div>
         </div>
-        <div class="info-note">
-            <strong>Nota:</strong> Los costos regulatorios (SUNAVAL, BVCC, CVV, CVV, etc.) se calcularán automáticamente. Ajusta la Calificación de Riesgo según el caso específico del cliente.
-        </div>
+
         <button class="btn-main" onclick="generarPresupuesto()">GENERAR PRESUPUESTO</button>
     </aside>
 
     <main class="main-content">
         <div id="emptyState" class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 20px; opacity: 0.2;">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
-                <path d="M8 12H16M12 8V16" />
-            </svg>
-            <p>Complete los datos del cliente y las comisiones<br>para generar el presupuesto de emisión.</p>
+            <p>Complete los datos para generar el presupuesto.</p>
         </div>
 
         <div id="resultsArea" class="hidden">
@@ -170,79 +341,48 @@
 </div>
 
 <script>
-    // URLs de imágenes
     const LOGO_PERCAPITAL_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769023852/Logo-Per-Capital-horizontal-negro_1_nmd85u.png";
-    const LOGO_MARCA_AGUA_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769177548/Nombre-Per-Capital-gris_e6yggs.png";
+    const LOGO_MARCA_AGUA_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769023852/Logo-Per-Capital-horizontal-negro_1_nmd85u.png";
 
-    // Logo cargado por el usuario (dataURL)
     let LOGO_EMPRESA_BASE64 = "";
-
     let d = {};
     const formatUSD = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
-    const formatPct = (v) => (typeof v === 'number' ? v.toFixed(2) : parseFloat(v).toFixed(2)) + '%';
+    const formatPct = (v) => v.toFixed(2) + '%';
 
     function cargarLogoEmpresa(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                LOGO_EMPRESA_BASE64 = e.target.result;
-                alert('Logo del cliente cargado exitosamente. Aparecerá en la esquina superior derecha del PDF.');
-            };
+            reader.onload = (e) => LOGO_EMPRESA_BASE64 = e.target.result;
             reader.readAsDataURL(file);
         }
     }
 
-    // Cargar cualquier imagen (URL o dataURL) y devolver dataUrl y dimensiones
-    function loadImage(src) {
-        return new Promise((resolve) => {
-            if (!src) return resolve(null);
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.onload = function() {
-                // Normalizar si la imagen es enorme para evitar canvas excesivo
-                const maxDim = 2000;
-                let w = img.width;
-                let h = img.height;
-                if (w > maxDim || h > maxDim) {
-                    const scale = maxDim / Math.max(w, h);
-                    w = Math.round(w * scale);
-                    h = Math.round(h * scale);
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                resolve({ dataUrl: canvas.toDataURL('image/png'), width: w, height: h });
-            };
-            img.onerror = function(err) {
-                console.error('Error cargando imagen', src, err);
-                resolve(null);
-            };
-            img.src = src;
-        });
+    function convertirImagenABase64(url, callback) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            callback(canvas.toDataURL('image/png'));
+        };
+        img.src = url;
     }
 
-    // Crea una versión semi-transparente (marca de agua) a partir de una imagen (URL o dataURL)
-    function makeWatermark(src, opacity) {
-        return new Promise(async (resolve) => {
-            const loaded = await loadImage(src);
-            if (!loaded) return resolve(null);
+    function crearMarcaDeAgua(url, opacidad, callback) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
             const canvas = document.createElement('canvas');
-            canvas.width = loaded.width;
-            canvas.height = loaded.height;
+            canvas.width = img.width; canvas.height = img.height;
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.globalAlpha = opacity;
-            const img = new Image();
-            img.onload = function() {
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve({ dataUrl: canvas.toDataURL('image/png'), width: canvas.width, height: canvas.height });
-            };
-            img.onerror = function() { resolve(null); };
-            img.src = loaded.dataUrl;
-        });
+            ctx.globalAlpha = opacidad;
+            ctx.drawImage(img, 0, 0);
+            callback(canvas.toDataURL('image/png'));
+        };
+        img.src = url;
     }
 
     function generarPresupuesto() {
@@ -262,7 +402,6 @@
         const registroNacional = monto * tasaRegSUNAVAL;
         const contribucionAnual = monto * 0.005;
         const calificacionRiesgo = parseFloat(document.getElementById('calificacionRiesgo').value);
-
         const estructuracion = monto * tasaEstructuracion;
         const tasaColocacionAplicada = monto > 1000000 ? tasaColocacionMayor : tasaColocacionMenor;
         const colocacion = monto * tasaColocacionAplicada;
@@ -270,248 +409,115 @@
         const publicacionAviso = 25;
         const bvcc = monto * 0.005;
 
-        let inscripcionISIN;
-        if (plazo <= 90) inscripcionISIN = 38;
-        else if (plazo <= 180) inscripcionISIN = 80;
-        else if (plazo <= 270) inscripcionISIN = 118;
-        else inscripcionISIN = 160;
-
-        const cvvMensual = monto * 0.0003;
-        const meses = Math.ceil(plazo / 30);
-        const cvvTotal = cvvMensual * meses;
+        let inscripcionISIN = plazo <= 90 ? 38 : (plazo <= 180 ? 80 : (plazo <= 270 ? 118 : 160));
+        const cvvTotal = (monto * 0.0003) * Math.ceil(plazo / 30);
         const iva = cvvTotal * 0.16;
-        const liquidacion = 0;
 
-        const totalComisiones = registroNacional + contribucionAnual + calificacionRiesgo +
-                               estructuracion + colocacion + representacion +
-                               publicacionAviso + bvcc + inscripcionISIN +
-                               cvvTotal + iva + liquidacion;
-
+        const totalComisiones = registroNacional + contribucionAnual + calificacionRiesgo + estructuracion + colocacion + representacion + publicacionAviso + bvcc + inscripcionISIN + cvvTotal + iva;
         const costoTotalEmision = totalComisiones + interesesTotales;
-        const costoFinanciamientoPct = (costoTotalEmision / monto) * 100;
 
         d = {
             empresa: document.getElementById('nombre').value.toUpperCase(),
-            monto, plazo, tasa: tasa*100,
-            frecuenciaInteres, amortizacionCapital,
-            esPyme,
+            monto, plazo, tasa: tasa*100, frecuenciaInteres, amortizacionCapital,
             tipoEmisorTexto: esPyme ? 'PYME' : 'No PYME',
-            interesesTotales,
-            registroNacional, tasaRegSUNAVAL: tasaRegSUNAVAL*100,
-            contribucionAnual,
-            calificacionRiesgo,
-            estructuracion, tasaEstructuracion: tasaEstructuracion*100,
+            interesesTotales, registroNacional, tasaRegSUNAVAL: tasaRegSUNAVAL*100,
+            contribucionAnual, calificacionRiesgo, estructuracion, tasaEstructuracion: tasaEstructuracion*100,
             colocacion, tasaColocacionAplicada: tasaColocacionAplicada*100,
-            representacion,
-            publicacionAviso,
-            bvcc,
-            inscripcionISIN,
-            cvvTotal, meses,
-            iva,
-            liquidacion,
-            totalComisiones,
-            costoTotalEmision,
-            costoFinanciamientoPct
+            representacion, publicacionAviso, bvcc, inscripcionISIN, cvvTotal, iva, totalComisiones, costoTotalEmision
         };
 
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('resultsArea').classList.remove('hidden');
-
-        document.getElementById('resEmpresa').innerText = d.empresa + ' (' + d.tipoEmisorTexto + ')';
+        document.getElementById('resEmpresa').innerText = d.empresa;
         document.getElementById('valCostoTotal').innerText = formatUSD(costoTotalEmision);
-        document.getElementById('valCostoPct').innerText = costoFinanciamientoPct.toFixed(2) + "% sobre capital";
+        document.getElementById('valCostoPct').innerText = ((costoTotalEmision / monto) * 100).toFixed(2) + "% sobre capital";
 
-        // rellenar tabla HTML en la UI como antes
-        let html = `<table class="detail-table"> ... </table>`; // (omitido por brevedad)
-        // Mantengo el contenido igual que antes (no influye en el PDF)
-        document.getElementById('tablaDetalle').innerHTML = html;
+        document.getElementById('tablaDetalle').innerHTML = `
+            <table class="detail-table">
+                <thead><tr><th>Concepto</th><th>Tasa / Base</th><th>Monto USD</th></tr></thead>
+                <tbody>
+                    <tr class="category-row"><td colspan="3">DESGLOSE DE COSTOS</td></tr>
+                    <tr><td>Registro Nacional SUNAVAL</td><td>${formatPct(d.tasaRegSUNAVAL)}</td><td>${formatUSD(d.registroNacional)}</td></tr>
+                    <tr><td>Contribución Especial Anual</td><td>0.50%</td><td>${formatUSD(d.contribucionAnual)}</td></tr>
+                    <tr><td>Calificación de Riesgo</td><td>${d.tipoEmisorTexto}</td><td>${formatUSD(d.calificacionRiesgo)}</td></tr>
+                    <tr><td>Estructuración Legal y Financiera</td><td>${formatPct(d.tasaEstructuracion)}</td><td>${formatUSD(d.estructuracion)}</td></tr>
+                    <tr><td>Colocación en Mercado</td><td>${formatPct(d.tasaColocacionAplicada)}</td><td>${formatUSD(d.colocacion)}</td></tr>
+                    <tr><td>Representación de Tenedores</td><td>0.25%</td><td>${formatUSD(d.representacion)}</td></tr>
+                    <tr><td>Publicación de Aviso de Prensa</td><td>Plana</td><td>${formatUSD(d.publicacionAviso)}</td></tr>
+                    <tr><td>Bolsa de Valores (BVCC)</td><td>0.50%</td><td>${formatUSD(d.bvcc)}</td></tr>
+                    <tr><td>Inscripción Código ISIN</td><td>S/ Plazo</td><td>${formatUSD(d.inscripcionISIN)}</td></tr>
+                    <tr><td>Custodia Caja de Valores (CVV)</td><td>0.03% mes</td><td>${formatUSD(d.cvvTotal)}</td></tr>
+                    <tr><td>IVA sobre CVV</td><td>16%</td><td>${formatUSD(d.iva)}</td></tr>
+                    <tr class="subtotal-row"><td colspan="2">TOTAL COMISIONES Y GASTOS</td><td class="value">${formatUSD(d.totalComisiones)}</td></tr>
+                    <tr><td>Intereses Totales</td><td>${d.tasa.toFixed(2)}% anual</td><td>${formatUSD(d.interesesTotales)}</td></tr>
+                    <tr class="total-row"><td colspan="2">COSTO TOTAL DE EMISIÓN</td><td class="value">${formatUSD(d.costoTotalEmision)}</td></tr>
+                </tbody>
+            </table>`;
     }
 
-    // Exportar PDF: intenta reducir escala hasta que quede en 1 página
-    async function exportarPDF() {
+    function exportarPDF() {
         const { jsPDF } = window.jspdf;
-        const PAGE = { w: 210, h: 297 }; // A4 mm
-        const MARGIN_BASE = 10; // mm (se reducirá con scale)
-        const fechaStr = new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'});
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = 210; const pageHeight = 297; const margin = 15;
 
-        // Cargar imágenes necesarias primero
-        const [logoPer, logoMarcaRaw, logoEmpresa] = await Promise.all([
-            loadImage(LOGO_PERCAPITAL_URL),
-            loadImage(LOGO_MARCA_AGUA_URL),
-            LOGO_EMPRESA_BASE64 ? loadImage(LOGO_EMPRESA_BASE64) : Promise.resolve(null)
-        ]);
-
-        // Crear watermark semi-transparente (opacidad 0.22)
-        const watermarkRaw = await makeWatermark(LOGO_MARCA_AGUA_URL, 0.22);
-
-        // Escalas a probar (de mayor a menor); se detiene cuando cabe en 1 página
-        const scales = [1.00, 0.95, 0.9, 0.88, 0.85, 0.82, 0.8, 0.78, 0.75];
-        let finalDoc = null;
-        let finalScale = scales[scales.length - 1];
-
-        for (let s of scales) {
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const margin = MARGIN_BASE * s;
-            const contentWidth = PAGE.w - margin * 2;
+        convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerBase64) {
             let y = margin;
+            try { doc.addImage(logoPerBase64, 'PNG', margin, y, 35, 10); } catch (e) {}
+            if (LOGO_EMPRESA_BASE64) { try { doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 35, y, 35, 10); } catch (e) {} }
 
-            // LOGO IZQ (más pequeño con scale)
-            try {
-                if (logoPer) doc.addImage(logoPer.dataUrl, 'PNG', margin, y, 34 * s, 10 * s);
-            } catch (e) { console.warn(e); }
+            y += 18;
+            doc.setTextColor(0, 0, 50); doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", pageWidth / 2, y, {align: 'center'});
 
-            // LOGO EMPRESA derecha si existe
-            if (logoEmpresa) {
-                try { doc.addImage(logoEmpresa.dataUrl, 'PNG', PAGE.w - margin - (34 * s), y, 34 * s, 10 * s); }
-                catch(e){ console.warn(e); }
-            }
+            y += 7;
+            doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(133, 157, 169);
+            doc.text(new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'}), pageWidth - margin, y, {align: 'right'});
 
-            y += 18 * s;
+            y += 6;
+            doc.setFillColor(240, 243, 245); doc.rect(margin, y, pageWidth - (margin * 2), 10, 'F');
+            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 0, 50);
+            doc.text(d.empresa, margin + 4, y + 6.5);
 
-            // Título
-            doc.setTextColor(0, 0, 50);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14 * s);
-            doc.text("PRESUPUESTO DE EMISIÓN DE DEUDA", PAGE.w / 2, y, { align: 'center' });
-
-            y += 8 * s;
-
-            // Fecha y lugar
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(8.5 * s);
-            doc.setTextColor(133, 157, 169);
-            doc.text(fechaStr, PAGE.w - margin, y, { align: 'right' });
-            doc.text("Caracas, Venezuela", PAGE.w - margin, y + (4 * s), { align: 'right' });
-
-            y += 11 * s;
-
-            // Línea
-            doc.setDrawColor(0, 0, 50);
-            doc.setLineWidth(0.8 * s);
-            doc.line(margin, y, PAGE.w - margin, y);
-
-            y += 8 * s;
-
-            // Caja con nombre empresa
-            doc.setFillColor(240, 243, 245);
-            doc.rect(margin, y - (4 * s), contentWidth, 11 * s, 'F');
-            doc.setFontSize(11 * s);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(0, 0, 50);
-            doc.text(d.empresa, margin + (3 * s), y + (4 * s));
-
-            y += 14 * s;
-
-            // Tablas con autotable — tamaños dependientes de 's'
-            // Configuración base multiplicada por s
-            const headFontSize = Math.max(8 * s, 6);
-            const bodyFontSize = Math.max(7.2 * s, 5.5);
-            const cellPadding = Math.max(2.6 * s, 1.6);
-
-            // Tabla 1 - características
+            y += 14;
             doc.autoTable({
                 startY: y,
-                head: [['CARACTERÍSTICAS DE LA EMISIÓN', 'VALOR']],
-                body: [
-                    ['Monto de Capital', formatUSD(d.monto)],
-                    ['Plazo', d.plazo + " días"],
-                    ['Tasa de Interés Anual', d.tasa.toFixed(2) + "%"],
-                    ['Frecuencia Pago Intereses', d.frecuenciaInteres],
-                    ['Amortización Capital', d.amortizacionCapital]
-                ],
-                theme: 'grid',
-                headStyles: { fillColor: [0, 0, 50], fontSize: headFontSize, fontStyle: 'bold', cellPadding: cellPadding, textColor: [255,255,255] },
-                bodyStyles: { fontSize: bodyFontSize, cellPadding: cellPadding, lineColor: [133,157,169], lineWidth: 0.12, textColor: [34,30,31] },
-                columnStyles: { 0: { cellWidth: contentWidth * 0.65, fontStyle: 'bold' }, 1: { cellWidth: contentWidth * 0.35, halign: 'right', fontStyle: 'bold' } },
-                margin: { left: margin, right: margin },
-                tableWidth: contentWidth,
-                pageBreak: 'avoid'
+                head: [['CARACTERÍSTICAS', 'VALOR']],
+                body: [['Monto', formatUSD(d.monto)], ['Plazo', d.plazo + " días"], ['Tasa Anual', d.tasa.toFixed(2) + "%"], ['Pago Interés', d.frecuenciaInteres], ['Amortización', d.amortizacionCapital]],
+                theme: 'grid', headStyles: { fillColor: [0, 0, 50], fontSize: 9, cellPadding: 2 },
+                bodyStyles: { fontSize: 8, cellPadding: 2 }, columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+                margin: { left: margin, right: margin }
             });
 
-            y = doc.lastAutoTable.finalY + (6 * s);
-
-            // Tabla 2 - costos
-            const pctTotal = ((d.costoTotalEmision / d.monto) * 100).toFixed(2);
+            y = doc.lastAutoTable.finalY + 5;
             doc.autoTable({
                 startY: y,
-                head: [['CONCEPTO', 'TASA / BASE', 'MONTO USD']],
+                head: [['CONCEPTO DESAGREGADO', 'TASA / BASE', 'MONTO USD']],
                 body: [
-                    ['Registro Nacional SUNAVAL:', formatPct(d.tasaRegSUNAVAL) + ' del monto', formatUSD(d.registroNacional)],
-                    ['Contribución Especial Anual:', '0.50% del monto', formatUSD(d.contribucionAnual)],
-                    ['Calificación de Riesgo:', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
-                    ['Estructuración Legal:', formatPct(d.tasaEstructuracion) + ' del monto', formatUSD(d.estructuracion)],
-                    ['Colocación en Mercado:', formatPct(d.tasaColocacionAplicada) + ' del monto', formatUSD(d.colocacion)],
-                    ['Representación Tenedores:', '0.25% del monto', formatUSD(d.representacion)],
-                    ['Publicación Aviso:', 'Plana', formatUSD(d.publicacionAviso)],
-                    ['Bolsa de Valores (BVCC):', '0.50% del monto', formatUSD(d.bvcc)],
-                    ['Inscripción ISIN:', 'Según plazo', formatUSD(d.inscripcionISIN)],
-                    ['Custodia CVV:', '0.03%/mes', formatUSD(d.cvvTotal)],
-                    ['IVA sobre CVV:', '16%', formatUSD(d.iva)],
-                    [{content: 'TOTAL COMISIONES', styles: {fillColor: [220,230,235], fontStyle: 'bold', fontSize: bodyFontSize, textColor: [0,0,50]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [220,230,235], fontStyle: 'bold', fontSize: bodyFontSize, textColor: [0,0,50]}}],
-                    ['Intereses Totales:', formatPct(d.tasa) + ' anual', formatUSD(d.interesesTotales)],
-                    [{content: 'COSTO TOTAL DE EMISIÓN', styles: {fillColor: [0,0,50], fontStyle: 'bold', textColor: [255,255,255], fontSize: headFontSize}}, '', {content: formatUSD(d.costoTotalEmision) + ' (' + pctTotal + '%)', styles: {fillColor: [0,0,50], fontStyle: 'bold', textColor: [255,255,255], fontSize: headFontSize}}]
+                    ['Registro Nacional SUNAVAL', formatPct(d.tasaRegSUNAVAL), formatUSD(d.registroNacional)],
+                    ['Contribución Especial Anual', '0.50%', formatUSD(d.contribucionAnual)],
+                    ['Calificación de Riesgo', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
+                    ['Estructuración Legal y Financiera', formatPct(d.tasaEstructuracion), formatUSD(d.estructuracion)],
+                    ['Colocación en Mercado', formatPct(d.tasaColocacionAplicada), formatUSD(d.colocacion)],
+                    ['Representación de Tenedores', '0.25%', formatUSD(d.representacion)],
+                    ['Publicación de Aviso de Prensa', 'Tarifa Plana', formatUSD(d.publicacionAviso)],
+                    ['Bolsa de Valores (BVCC)', '0.50%', formatUSD(d.bvcc)],
+                    ['Inscripción Código ISIN', 'S/ Plazo', formatUSD(d.inscripcionISIN)],
+                    ['Custodia Caja de Valores (CVV)', '0.03% mes', formatUSD(d.cvvTotal)],
+                    ['IVA sobre CVV', '16%', formatUSD(d.iva)],
+                    [{content: 'TOTAL COMISIONES Y GASTOS', styles: {fillColor: [220, 230, 235], fontStyle: 'bold'}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [220, 230, 235], fontStyle: 'bold', halign: 'right'}}],
+                    ['Intereses Totales Proyectados', d.tasa.toFixed(2)+'%', formatUSD(d.interesesTotales)],
+                    [{content: 'COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [0, 0, 50], textColor: 255, fontStyle: 'bold'}}, '', {content: formatUSD(d.costoTotalEmision), styles: {fillColor: [0, 0, 50], textColor: 255, fontStyle: 'bold', halign: 'right'}}]
                 ],
-                theme: 'grid',
-                headStyles: { fillColor: [0,0,50], fontSize: headFontSize, fontStyle: 'bold', cellPadding: cellPadding, textColor: [255,255,255] },
-                bodyStyles: { fontSize: bodyFontSize, cellPadding: cellPadding, lineColor: [133,157,169], lineWidth: 0.12, textColor: [34,30,31] },
-                columnStyles: { 0: { cellWidth: contentWidth*0.50 }, 1: { cellWidth: contentWidth*0.25, halign: 'center', fontStyle: 'bold' }, 2: { cellWidth: contentWidth*0.25, halign: 'right', fontStyle: 'bold' } },
-                margin: { left: margin, right: margin },
-                tableWidth: contentWidth,
-                pageBreak: 'avoid'
+                theme: 'grid', headStyles: { fillColor: [0, 0, 50], fontSize: 9, cellPadding: 2 },
+                bodyStyles: { fontSize: 8, cellPadding: 1.8 }, columnStyles: { 2: { halign: 'right', fontStyle: 'bold' } },
+                margin: { left: margin, right: margin }
             });
 
-            // Pie
-            let yPie = doc.lastAutoTable.finalY + (6 * s);
-            doc.setFontSize(8 * s);
-            doc.setTextColor(133,157,169);
-            doc.text("Presupuesto estimativo. Per Capital - Estructuración de Instrumentos | " + fechaStr, margin, yPie);
-
-            // Añadir watermark (en mitad baja: ~65% vertical)
-            if (watermarkRaw) {
-                try {
-                    const maxW = contentWidth * 0.92 * s; // relativo al scale
-                    const scaleW = Math.min(1, maxW / watermarkRaw.width);
-                    const wW = watermarkRaw.width * scaleW;
-                    const wH = watermarkRaw.height * scaleW;
-
-                    const xW = (PAGE.w - wW) / 2;
-                    // mitad baja: alrededor de 65% de la altura de la página
-                    const centerY = PAGE.h * 0.65;
-                    const yW = centerY - (wH / 2);
-
-                    doc.addImage(watermarkRaw.dataUrl, 'PNG', xW, yW, wW, wH);
-                } catch(e) {
-                    console.warn('No se pudo añadir watermark', e);
-                }
-            }
-
-            // Comprobar número de páginas (método estándar o fallback)
-            let pages = 1;
-            if (typeof doc.getNumberOfPages === 'function') pages = doc.getNumberOfPages();
-            else if (doc.internal && doc.internal.getNumberOfPages) pages = doc.internal.getNumberOfPages();
-            else {
-                // fallback conservador
-                pages = 1;
-            }
-
-            if (pages === 1) {
-                finalDoc = doc;
-                finalScale = s;
-                break; // listo en una página
-            }
-            // si no cabe, seguir probando con siguiente escala
-        }
-
-        if (!finalDoc) {
-            // Si no quedó en 1 página con escalas, usar el último intento (más pequeño)
-            const { jsPDF: jsp } = window.jspdf;
-            finalDoc = new jspdf.jsPDF('p','mm','a4'); // fallback mínimo (aunque no tendrá tablas)
-            alert('No fue posible ajustar todo a una sola página automáticamente; se generó el PDF, revisa contenido.');
-        }
-
-        // Guardar con nombre seguro
-        const safeName = (d.empresa || 'presupuesto').replace(/[^a-z0-9_\-\.]/gi, '_');
-        finalDoc.save(`Presupuesto_${safeName}.pdf`);
+            crearMarcaDeAgua(LOGO_MARCA_AGUA_URL, 0.08, function(wmBase64) {
+                try { doc.addImage(wmBase64, 'PNG', (pageWidth - 90) / 2, 190, 90, 25); } catch (e) {}
+                doc.save(`Presupuesto_${d.empresa}.pdf`);
+            });
+        });
     }
 </script>
 </body>
