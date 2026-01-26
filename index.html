@@ -234,6 +234,19 @@
             color: #065f46;
         }
         .precision-info strong { color: #047857; }
+
+        /* Alerta para emisión indexada */
+        .indexada-alert {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin: 10px 0;
+            font-size: 0.7rem;
+            color: #92400e;
+            font-weight: 600;
+        }
+        .indexada-alert strong { color: #78350f; }
     </style>
 </head>
 <body>
@@ -269,6 +282,17 @@
         </div>
 
         <div class="section-title">CARACTERÍSTICAS DE LA EMISIÓN</div>
+        <div class="form-group">
+            <label>Tipo de Emisión</label>
+            <select id="tipoEmision" onchange="mostrarAlertaIndexada()">
+                <option value="USD" selected>En Dólares (USD)</option>
+                <option value="INDEXADA">Indexada</option>
+            </select>
+            <div class="help-text">📌 Indexada: se aplica Abono de Beneficios CVV del 0.09% sobre intereses y capital pagado.</div>
+        </div>
+        <div id="alertaIndexada" class="indexada-alert hidden">
+            <strong>⚠️ Emisión Indexada:</strong> Se aplicará Abono de Beneficios CVV del 0.09% sobre los pagos de intereses y capital durante toda la vigencia de la emisión.
+        </div>
         <div class="form-group">
             <label>Monto a Emitir (USD)</label>
             <input type="number" id="monto" value="300000" />
@@ -399,6 +423,16 @@
         return num.toFixed(2) + '%';
     };
 
+    function mostrarAlertaIndexada() {
+        const tipoEmision = document.getElementById('tipoEmision').value;
+        const alerta = document.getElementById('alertaIndexada');
+        if (tipoEmision === 'INDEXADA') {
+            alerta.classList.remove('hidden');
+        } else {
+            alerta.classList.add('hidden');
+        }
+    }
+
     function cargarLogoEmpresa(event) {
         const file = event.target.files[0];
         if (file) {
@@ -438,7 +472,7 @@
     }
 
     // Cálculo de flujo con Decimal.js para precisión
-    function calcularFlujo(monto, meses, tasaAnual, frecuenciaInteres, amortizacionCapital, capitalNeto) {
+    function calcularFlujo(monto, meses, tasaAnual, frecuenciaInteres, amortizacionCapital, capitalNeto, esIndexada) {
         const flujo = [];
         const M = new Decimal(monto);
         const T = new Decimal(tasaAnual);
@@ -447,6 +481,9 @@
         const cvvBase = M.times(new Decimal('0.0003'));
         const ivaCVV = new Decimal('0.16');
         const cvvConIVA = cvvBase.times(ivaCVV.plus(1));
+        
+        // Abono de Beneficios CVV: 0.09% sobre intereses y capital
+        const tasaAbonoBeneficiosCVV = new Decimal('0.0009');
         
         // Tasa mensual
         const tasaMensual = T.dividedBy(12);
@@ -475,7 +512,8 @@
             mes: 0, 
             capital: new Decimal(capitalNeto), 
             cvv: new Decimal(0), 
-            intereses: new Decimal(0), 
+            intereses: new Decimal(0),
+            abonoBeneficiosCVV: new Decimal(0),
             total: new Decimal(capitalNeto) 
         });
         
@@ -485,6 +523,7 @@
             let capitalMes = new Decimal(0);
             let interesesMes = new Decimal(0);
             let cvvMes = cvvConIVA.negated();
+            let abonoBeneficiosCVVMes = new Decimal(0);
             
             // Intereses según frecuencia
             if (frecuenciaInteres === 'Mensual') {
@@ -506,13 +545,20 @@
                 capitalPendiente = capitalPendiente.minus(amort.monto);
             }
             
-            const total = capitalMes.plus(cvvMes).plus(interesesMes);
+            // Abono de Beneficios CVV para emisión indexada (0.09% sobre intereses + capital pagados)
+            if (esIndexada) {
+                const baseIndexada = interesesMes.abs().plus(capitalMes.abs());
+                abonoBeneficiosCVVMes = baseIndexada.times(tasaAbonoBeneficiosCVV).negated();
+            }
+            
+            const total = capitalMes.plus(cvvMes).plus(interesesMes).plus(abonoBeneficiosCVVMes);
             
             flujo.push({ 
                 mes: m, 
                 capital: capitalMes, 
                 cvv: cvvMes, 
-                intereses: interesesMes, 
+                intereses: interesesMes,
+                abonoBeneficiosCVV: abonoBeneficiosCVVMes,
                 total: total 
             });
         }
@@ -526,6 +572,7 @@
         const plazoNum = parseInt(document.getElementById('plazo').value);
         const tasaNum = parseFloat(document.getElementById('tasa').value);
         const esPyme = document.getElementById('tipoEmisor').value === 'PYME';
+        const esIndexada = document.getElementById('tipoEmision').value === 'INDEXADA';
         const frecuenciaInteres = document.getElementById('frecuenciaInteres').value;
         const amortizacionCapital = document.getElementById('amortizacionCapital').value;
 
@@ -585,6 +632,13 @@
         // IVA sobre CVV: 16%
         const ivaCVV = cvvTotal.times(new Decimal('0.16'));
 
+        // Abono de Beneficios CVV por emisión indexada: 0.09% sobre (intereses + capital)
+        let abonoBeneficiosCVVTotal = new Decimal(0);
+        if (esIndexada) {
+            const baseIndexada = interesesTotales.plus(monto);
+            abonoBeneficiosCVVTotal = baseIndexada.times(new Decimal('0.0009'));
+        }
+
         // Costos iniciales (se descuentan del capital)
         const costosIniciales = registroNacional
             .plus(contribucionAnual)
@@ -596,8 +650,8 @@
             .plus(bvcc)
             .plus(inscripcionISIN);
         
-        // Total comisiones (incluye CVV + IVA)
-        const totalComisiones = costosIniciales.plus(cvvTotal).plus(ivaCVV);
+        // Total comisiones (incluye CVV + IVA + Abono de Beneficios CVV)
+        const totalComisiones = costosIniciales.plus(cvvTotal).plus(ivaCVV).plus(abonoBeneficiosCVVTotal);
         
         // Costo total de financiamiento
         const costoTotalEmision = totalComisiones.plus(interesesTotales);
@@ -618,6 +672,8 @@
             frecuenciaInteres,
             amortizacionCapital,
             tipoEmisorTexto: esPyme ? 'PYME' : 'No PYME',
+            tipoEmisionTexto: esIndexada ? 'Indexada' : 'En Dólares (USD)',
+            esIndexada: esIndexada,
             interesesTotales: interesesTotales.toNumber(),
             registroNacional: registroNacional.toNumber(),
             tasaRegSUNAVAL: tasaRegSUNAVAL.times(100).toNumber(),
@@ -634,6 +690,7 @@
             inscripcionISIN: inscripcionISIN.toNumber(),
             cvvTotal: cvvTotal.toNumber(),
             ivaCVV: ivaCVV.toNumber(),
+            abonoBeneficiosCVVTotal: abonoBeneficiosCVVTotal.toNumber(),
             totalComisiones: totalComisiones.toNumber(),
             costoTotalEmision: costoTotalEmision.toNumber(),
             costoFinanciamientoPct: costoFinanciamientoPct.toNumber(),
@@ -642,7 +699,7 @@
         };
 
         // Calcular flujo de caja
-        flujoData = calcularFlujo(montoNum, meses, tasa.toNumber(), frecuenciaInteres, amortizacionCapital, capitalNeto.toNumber());
+        flujoData = calcularFlujo(montoNum, meses, tasa.toNumber(), frecuenciaInteres, amortizacionCapital, capitalNeto.toNumber(), esIndexada);
 
         // Mostrar resultados
         document.getElementById('emptyState').classList.add('hidden');
@@ -658,6 +715,15 @@
                 <td>Registro Nacional SUNAVAL<span class="formula-hint">= ${formatUSD(d.monto)} × 2%</span></td>
                 <td>${formatPct(d.tasaRegSUNAVAL)}</td>
                 <td style="text-align:right">${formatUSD(d.registroNacional)}</td>
+            </tr>`;
+        }
+
+        let abonoBeneficiosCVVRow = '';
+        if (esIndexada) {
+            abonoBeneficiosCVVRow = `<tr>
+                <td>Abono de Beneficios CVV<span class="formula-hint">= (${formatUSD(d.interesesTotales)} + ${formatUSD(d.monto)}) × 0.09%</span></td>
+                <td>0.09%</td>
+                <td style="text-align:right">${formatUSD(d.abonoBeneficiosCVVTotal)}</td>
             </tr>`;
         }
 
@@ -717,6 +783,7 @@
                         <td>16%</td>
                         <td style="text-align:right">${formatUSD(d.ivaCVV)}</td>
                     </tr>
+                    ${abonoBeneficiosCVVRow}
                     <tr class="subtotal-row"><td colspan="2">TOTAL COMISIONES Y GASTOS</td><td style="text-align:right">${formatUSD(d.totalComisiones)}</td></tr>
                     <tr>
                         <td>Intereses Totales Proyectados<span class="formula-hint">= ${formatUSD(d.monto)} × ${d.tasa}% × (${d.plazo} ÷ 360)</span></td>
@@ -754,6 +821,13 @@
         html += '<tr><td class="row-label">Intereses</td>';
         flujoData.forEach(f => html += formatCell(f.intereses));
         html += '</tr>';
+
+        // Solo mostrar fila de Abono de Beneficios CVV si aplica
+        if (d.esIndexada) {
+            html += '<tr><td class="row-label">Abono CVV</td>';
+            flujoData.forEach(f => html += formatCell(f.abonoBeneficiosCVV));
+            html += '</tr>';
+        }
 
         html += '<tr><td class="row-label total-row-flujo">Total</td>';
         flujoData.forEach(f => html += formatCell(f.total, true));
@@ -796,7 +870,8 @@
                     ['Tasa Anual', d.tasa.toFixed(2) + "%"],
                     ['Pago Interés', d.frecuenciaInteres],
                     ['Amortización', d.amortizacionCapital],
-                    ['Tipo Emisor', d.tipoEmisorTexto]
+                    ['Tipo Emisor', d.tipoEmisorTexto],
+                    ['Tipo Emisión', d.tipoEmisionTexto]
                 ],
                 theme: 'grid',
                 headStyles: { fillColor: [10, 15, 44], fontSize: 7, cellPadding: 1.5, fontStyle: 'bold' },
@@ -820,7 +895,15 @@
                 ['Bolsa de Valores (BVCC)', '0.50%', formatUSD(d.bvcc)],
                 ['Inscripción Código ISIN (CVV)', 'S/ Plazo', formatUSD(d.inscripcionISIN)],
                 ['Custodia Caja de Valores (CVV)', '0.03% mensual', formatUSD(d.cvvTotal)],
-                ['IVA sobre CVV', '16%', formatUSD(d.ivaCVV)],
+                ['IVA sobre CVV', '16%', formatUSD(d.ivaCVV)]
+            ]);
+
+            // Agregar Abono de Beneficios CVV si aplica
+            if (d.esIndexada) {
+                bodyData.push(['Abono de Beneficios CVV', '0.09%', formatUSD(d.abonoBeneficiosCVVTotal)]);
+            }
+
+            bodyData = bodyData.concat([
                 [{content: 'TOTAL COMISIONES Y GASTOS', styles: {fillColor: [226, 232, 240], fontStyle: 'bold', textColor: [10, 15, 44]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [226, 232, 240], fontStyle: 'bold', halign: 'right', textColor: [10, 15, 44]}}],
                 ['Intereses Totales Proyectados', d.tasa.toFixed(2)+'%', formatUSD(d.interesesTotales)],
                 [{content: 'COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [10, 15, 44], textColor: 255, fontStyle: 'bold'}}, '', {content: formatUSD(d.costoTotalEmision), styles: {fillColor: [10, 15, 44], textColor: 255, fontStyle: 'bold', halign: 'right'}}],
@@ -845,24 +928,31 @@
             y += 3;
 
             const flujoHead = [['Mes'].concat(flujoData.map(f => f.mes.toString()))];
-            const flujoBody = [
+            const flujoBodyRows = [
                 ['Capital'].concat(flujoData.map(f => formatUSD(f.capital))),
                 ['CVV'].concat(flujoData.map(f => formatUSD(f.cvv))),
-                ['Intereses'].concat(flujoData.map(f => formatUSD(f.intereses))),
-                ['Total'].concat(flujoData.map(f => formatUSD(f.total)))
+                ['Intereses'].concat(flujoData.map(f => formatUSD(f.intereses)))
             ];
+
+            // Agregar fila de Abono de Beneficios CVV si aplica
+            if (d.esIndexada) {
+                flujoBodyRows.push(['Abono CVV'].concat(flujoData.map(f => formatUSD(f.abonoBeneficiosCVV))));
+            }
+
+            flujoBodyRows.push(['Total'].concat(flujoData.map(f => formatUSD(f.total))));
 
             doc.autoTable({
                 startY: y,
                 head: flujoHead,
-                body: flujoBody,
+                body: flujoBodyRows,
                 theme: 'grid',
                 headStyles: { fillColor: [30, 58, 138], fontSize: 5.5, cellPadding: 1, halign: 'center', fontStyle: 'bold' },
                 bodyStyles: { fontSize: 5, cellPadding: 1, halign: 'right', textColor: [30, 41, 59] },
                 columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 14 } },
                 margin: { left: margin, right: margin },
                 didParseCell: function(data) {
-                    if (data.row.index === 3) {
+                    const lastRowIndex = d.esIndexada ? 4 : 3;
+                    if (data.row.index === lastRowIndex) {
                         data.cell.styles.fillColor = [219, 234, 254];
                         data.cell.styles.fontStyle = 'bold';
                     }
