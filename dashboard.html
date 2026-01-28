@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Papeles Comerciales Per Capital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .theme-dark-blue-bg { background-color: #0A1128; }
+        .theme-card-bg { background-color: #1A253F; }
+        .theme-folder-header-bg { background-color: #2A3F5B; }
+        .theme-text-white { color: #FFFFFF; }
+        .theme-text-light-gray { color: #E5E7EB; }
+        .theme-accent-green { color: #34D399; }
+        .theme-strong-green-bg { background-color: #10B981; }
+        .theme-border-green { border-color: #34D399; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A1128;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .btn-toggle { transition: all 0.2s ease-in-out; }
+        .btn-toggle.aplica {
+            background-color: #10B981;
+            color: white;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+        .btn-toggle.no-aplica {
+            background-color: #ef4444;
+            color: white;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .file-input-label {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            background-color: #10B981;
+            color: white;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .file-input-label:hover { background-color: #059669; }
+        .file-input-display {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.875rem;
+            color: #9CA3AF;
+        }
+        .folder-header {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .folder-header:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .folder-header svg { transition: transform 0.3s ease-in-out; }
+        .folder-header.expanded svg { transform: rotate(180deg); }
+        .status-positive { color: #10B981; }
+        .status-negative { color: #dc2626; }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #1A253F;
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 1.5rem;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #10B981;
+            width: 0%;
+            border-radius: 9999px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            line-height: 1.5rem;
+            transition: width 0.5s ease-in-out;
+        }
+        .app-container {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .app-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .spinner {
+            border: 3px solid #1A253F;
+            border-top: 3px solid #34D399;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .sync-indicator {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
+        .sync-ok { background-color: #065f46; color: #34D399; }
+        .sync-saving { background-color: #92400e; color: #fbbf24; }
+        .sync-error { background-color: #7f1d1d; color: #fca5a5; }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <!-- Sync Indicator -->
+    <div id="sync-indicator" class="sync-indicator sync-ok" style="opacity:0;">Sincronizado</div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="login-container w-full">
+        <div class="theme-card-bg rounded-2xl shadow-xl p-8 w-full max-w-md border theme-border-green">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold theme-text-white mb-2">Per Capital</h1>
+                <p class="theme-text-light-gray text-lg">Dashboard de Control y Seguimiento</p>
+                <p class="theme-accent-green text-sm mt-1">Departamento de Tesoreria</p>
+            </div>
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium theme-text-light-gray mb-1">Correo Electronico</label>
+                    <input type="email" id="login-email" required placeholder="javier@percapital.com"
+                        class="w-full p-3 border theme-border-green rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-900 theme-text-white">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium theme-text-light-gray mb-1">Contrasena</label>
+                    <input type="password" id="login-password" required placeholder="••••••••"
+                        class="w-full p-3 border theme-border-green rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-900 theme-text-white">
+                </div>
+                <div id="login-error" class="hidden bg-red-700 text-white text-sm p-3 rounded-lg"></div>
+                <button type="submit" id="login-btn"
+                    class="w-full theme-strong-green-bg theme-text-white px-5 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold shadow-md text-lg">
+                    Iniciar Sesion
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD (hidden until authenticated) -->
+    <div id="app-wrapper" class="max-w-5xl mx-auto theme-dark-blue-bg shadow-xl rounded-2xl overflow-hidden app-container hidden">
+        <header class="theme-card-bg p-8 rounded-t-2xl text-white text-center relative">
+            <h1 class="text-4xl font-extrabold mb-2 leading-tight theme-text-white">Papeles comerciales Per Capital</h1>
+            <p class="text-xl font-light opacity-90 theme-text-light-gray">Sigue el progreso de cada etapa del proceso por empresa</p>
+            <p id="user-display" class="text-lg font-medium mt-3 theme-text-light-gray">Cargando...</p>
+            <button id="logout-btn" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                Cerrar Sesion
+            </button>
+        </header>
+
+        <main class="p-8 space-y-8">
+            <!-- Company Management -->
+            <div class="theme-card-bg border theme-border-green rounded-xl p-6 shadow-md">
+                <h2 class="text-2xl font-bold theme-accent-green mb-4">Administrar Empresas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="new-company-name" placeholder="Nombre de la nueva empresa"
+                        class="p-3 border theme-border-green rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-900 theme-text-white">
+                    <button id="add-company-btn"
+                        class="theme-strong-green-bg theme-text-white px-5 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold shadow-md">
+                        Anadir Empresa
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <select id="company-select"
+                        class="p-3 border theme-border-green rounded-lg focus:ring-green-400 focus:border-green-400 bg-gray-900 theme-text-white">
+                        <option value="">-- Seleccionar Empresa --</option>
+                    </select>
+                    <button id="delete-company-btn"
+                        class="bg-red-500 theme-text-white px-5 py-3 rounded-lg hover:bg-red-600 transition-colors duration-200 font-semibold shadow-md">
+                        Eliminar Empresa Seleccionada
+                    </button>
+                </div>
+                <div id="message-box" class="mt-4 p-3 hidden rounded-lg text-sm" role="alert"></div>
+            </div>
+
+            <!-- Recaudos Section -->
+            <div id="recaudos-section" class="hidden space-y-6">
+
+                <!-- Folder 1: Legal -->
+                <div id="folder-legal" class="folder border theme-border-green rounded-lg theme-card-bg transition-shadow duration-300 hover:shadow-lg">
+                    <div class="folder-header flex items-center justify-between p-4 cursor-pointer theme-folder-header-bg rounded-t-lg">
+                        <h2 class="text-xl font-semibold theme-text-white">1. Legal</h2>
+                        <svg class="w-6 h-6 theme-accent-green transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="folder-content hidden p-4 border-t theme-border-green space-y-4">
+                        <!-- Acta Constitutiva -->
+                        <div class="sub-folder border theme-border-green rounded-lg p-3 theme-dark-blue-bg shadow-sm">
+                            <h3 class="text-lg font-medium theme-accent-green mb-3">Acta Constitutiva</h3>
+                            <div class="flex flex-wrap items-center gap-3 mb-3">
+                                <input type="date" id="acta-constitutiva-date" class="p-2 border theme-border-green rounded-md text-sm w-36 bg-gray-900 theme-text-white">
+                                <input type="file" id="file-acta-constitutiva" class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                                <label for="file-acta-constitutiva" class="file-input-label">Anexar Acta</label>
+                                <span id="acta-constitutiva-file-name" class="file-input-display"></span>
+                                <button type="button" id="add-acta-constitutiva-btn" class="theme-strong-green-bg theme-text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir</button>
+                            </div>
+                            <ul id="list-acta-constitutiva" class="space-y-2 theme-text-light-gray text-sm border-t pt-2 mt-2 theme-border-green"></ul>
+                        </div>
+
+                        <!-- Aumento de Capital -->
+                        <div class="sub-folder border theme-border-green rounded-lg p-3 theme-dark-blue-bg shadow-sm">
+                            <h3 class="text-lg font-medium theme-accent-green mb-3">Aumento de Capital</h3>
+                            <div class="flex flex-wrap items-center gap-3 mb-3">
+                                <input type="date" id="aumento-capital-date" class="p-2 border theme-border-green rounded-md text-sm w-36 bg-gray-900 theme-text-white">
+                                <input type="file" id="file-aumento-capital" class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                                <label for="file-aumento-capital" class="file-input-label">Anexar Aumento</label>
+                                <span id="aumento-capital-file-name" class="file-input-display"></span>
+                                <button type="button" id="add-aumento-capital-btn" class="theme-strong-green-bg theme-text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir</button>
+                            </div>
+                            <ul id="list-aumento-capital" class="space-y-2 theme-text-light-gray text-sm border-t pt-2 mt-2 theme-border-green"></ul>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="legal-ubicaciones" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Ubicaciones</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="legal-permisos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Permisos</label>
+                        </div>
+                        <div class="relative flex items-center">
+                            <input type="checkbox" data-recaudo="legal-empresa-matrix" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Empresa Matrix</label>
+                            <button type="button" id="btn-empresa-matrix" class="btn-toggle ml-4 px-3 py-1 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400">Aplica / No Aplica</button>
+                            <span id="matrix-acta-display-status" class="ml-2 text-sm font-medium hidden"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder 2: Financiero -->
+                <div id="folder-financiero" class="folder border theme-border-green rounded-lg theme-card-bg transition-shadow duration-300 hover:shadow-lg">
+                    <div class="folder-header flex items-center justify-between p-4 cursor-pointer theme-folder-header-bg rounded-t-lg">
+                        <h2 class="text-xl font-semibold theme-text-white">2. Financiero</h2>
+                        <svg class="w-6 h-6 theme-accent-green transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="folder-content hidden p-4 border-t theme-border-green space-y-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="financiero-islr" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Declaraciones de ISLR</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="financiero-estado-resultado" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Estado de Resultado</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="financiero-balance-general" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Balance General</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="financiero-auditorias" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Auditorias</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder 3: Administrativo -->
+                <div id="folder-administrativo" class="folder border theme-border-green rounded-lg theme-card-bg transition-shadow duration-300 hover:shadow-lg">
+                    <div class="folder-header flex items-center justify-between p-4 cursor-pointer theme-folder-header-bg rounded-t-lg">
+                        <h2 class="text-xl font-semibold theme-text-white">3. Administrativo</h2>
+                        <svg class="w-6 h-6 theme-accent-green transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="folder-content hidden p-4 border-t theme-border-green space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="admin-ct-accionistas" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">C.T Accionistas</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="ml-3 theme-text-light-gray text-base whitespace-nowrap">Numero de Accionistas:</label>
+                            <input type="number" id="admin-num-accionistas" data-recaudo="admin-num-accionistas" placeholder="Cantidad"
+                                class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-24 bg-gray-900 theme-text-white">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="admin-rif-accionistas" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">RIF Accionistas</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="admin-cv-accionistas" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">CV Accionistas y Junta Directiva</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="admin-rif-bancarios" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">RIF Bancarios</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="admin-rif-compania" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">RIF de la Compania</label>
+                        </div>
+
+                        <!-- Licencias -->
+                        <div class="sub-folder border theme-border-green rounded-lg p-3 theme-dark-blue-bg shadow-sm">
+                            <h3 class="text-lg font-medium theme-accent-green mb-3">Licencias</h3>
+                            <div class="flex flex-wrap items-center gap-3 mb-3">
+                                <input type="text" id="admin-licencia-name" placeholder="Nombre de la licencia"
+                                    class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 theme-text-white">
+                                <button type="button" id="add-licencia-btn" class="theme-strong-green-bg theme-text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir Licencia</button>
+                            </div>
+                            <ul id="list-licencias" class="space-y-2 theme-text-light-gray text-sm border-t pt-2 mt-2 theme-border-green"></ul>
+                        </div>
+
+                        <!-- RRHH -->
+                        <div class="sub-folder border theme-border-green rounded-lg p-3 theme-dark-blue-bg shadow-sm">
+                            <h3 class="text-lg font-medium theme-accent-green mb-3">RRHH</h3>
+                            <div class="flex flex-wrap items-center gap-3 mb-3">
+                                <input type="text" id="admin-rrhh-item-name" placeholder="Item de RRHH"
+                                    class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 theme-text-white">
+                                <button type="button" id="add-rrhh-item-btn" class="theme-strong-green-bg theme-text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir Item RRHH</button>
+                            </div>
+                            <ul id="list-rrhh-items" class="space-y-2 theme-text-light-gray text-sm border-t pt-2 mt-2 theme-border-green"></ul>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="admin-gobierno-corporativo" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Gobierno Corporativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder 4: Actividad -->
+                <div id="folder-actividad" class="folder border theme-border-green rounded-lg theme-card-bg transition-shadow duration-300 hover:shadow-lg">
+                    <div class="folder-header flex items-center justify-between p-4 cursor-pointer theme-folder-header-bg rounded-t-lg">
+                        <h2 class="text-xl font-semibold theme-text-white">4. Actividad</h2>
+                        <svg class="w-6 h-6 theme-accent-green transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="folder-content hidden p-4 border-t theme-border-green space-y-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="actividad-estrategias-mercado" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Estrategias de Mercado y Mercadeo</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="actividad-garantia" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Garantia</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="actividad-libro-cv" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Libro C/V</label>
+                        </div>
+                        <div class="flex items-center flex-wrap gap-2">
+                            <input type="checkbox" data-recaudo="actividad-maquinaria-equipos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Maquinaria y Equipos:</label>
+                            <input type="number" id="maquinaria-valor-cada" data-recaudo="actividad-maquinaria-valor-unitario" placeholder="Valor unitario"
+                                class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-32 bg-gray-900 theme-text-white">
+                            <input type="number" id="maquinaria-valor-mercado" data-recaudo="actividad-maquinaria-valor-mercado" placeholder="Valor de mercado $"
+                                class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-36 bg-gray-900 theme-text-white">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="actividad-poliza" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Poliza</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" data-recaudo="actividad-ventas" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Ventas:</label>
+                            <input type="number" id="ventas-monto" data-recaudo="actividad-ventas-monto" placeholder="Monto total"
+                                class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-32 bg-gray-900 theme-text-white">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="actividad-direcciones-sedes" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Direcciones de Sedes</label>
+                        </div>
+
+                        <!-- Marcas y Redes Sociales -->
+                        <div class="sub-folder border theme-border-green rounded-lg p-3 theme-dark-blue-bg shadow-sm">
+                            <h3 class="text-lg font-medium theme-accent-green mb-3">Marcas y Redes Sociales</h3>
+                            <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 mb-3">
+                                <input type="text" id="actividad-marca-name" placeholder="Nombre de la marca"
+                                    class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 theme-text-white">
+                                <input type="file" id="file-marca-document" class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                                <label for="file-marca-document" class="file-input-label">Anexar Documento</label>
+                                <span id="marca-document-file-name" class="file-input-display"></span>
+                                <input type="text" id="actividad-rrss-link" placeholder="Enlace de RRSS"
+                                    class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 theme-text-white">
+                                <button type="button" id="add-marca-rrss-btn" class="theme-strong-green-bg theme-text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir Marca</button>
+                            </div>
+                            <ul id="list-marcas-rrss" class="space-y-2 theme-text-light-gray text-sm border-t pt-2 mt-2 theme-border-green"></ul>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="actividad-matrix-riesgo" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Matriz de Riesgo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder 5: Emisor -->
+                <div id="folder-emisor" class="folder border theme-border-green rounded-lg theme-card-bg transition-shadow duration-300 hover:shadow-lg">
+                    <div class="folder-header flex items-center justify-between p-4 cursor-pointer theme-folder-header-bg rounded-t-lg">
+                        <h2 class="text-xl font-semibold theme-text-white">5. Emisor</h2>
+                        <svg class="w-6 h-6 theme-accent-green transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="folder-content hidden p-4 border-t theme-border-green space-y-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-oportunidad-inversion" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Oportunidad de Inversion</label>
+                        </div>
+
+                        <!-- Recaudos de la Calificadora -->
+                        <div class="pl-6 pt-2 border-l-4 theme-border-green rounded-lg theme-dark-blue-bg p-3 shadow-inner">
+                            <h3 class="font-medium theme-accent-green mb-2">Recaudos de la Calificadora:</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-descripcion-actividad" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Descripcion de su actividad por lineas de negocio</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-capacidad-instalada" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Capacidad Instalada Vs. Capacidad Utilizada</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-linea-productos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Linea de productos</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-ventas-reales-estimadas" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Ventas reales y estimadas</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-evolucion-precios" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Evolucion de los precios</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-estructura-costos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Hacer estructura de costos</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-estrategia-marketing" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Estrategia de mercado y publicidad</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-desarrollo-nuevos-productos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Desarrollo de nuevos productos</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" data-recaudo="recaudos-poliza-seguro" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                                    <label class="ml-3 theme-text-light-gray text-base">Poliza y seguro y resguardo</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center mt-3">
+                            <input type="checkbox" data-recaudo="emisor-prospecto" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Prospecto</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-telefono-sedes" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Telefono de las sedes</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-marcas-rs-productos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Marcas de y RS cada producto y fecha de lanzamiento de los productos</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-propiedades" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Propiedades</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-clientes-proveedores" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Clientes y Proveedores y % y Ventas %</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-proveedores-costo" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Proveedores y Costo % anos</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-hoja-terminos" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Hoja de Terminos</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-aviso-prensa" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Aviso de Prensa</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-macrotitulo" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Macrotitulo</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-certificado-acta-constitutiva" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Certificado de Acta Constitutiva</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" data-recaudo="emisor-acta-acciones" class="recaudo-checkbox form-checkbox h-5 w-5 text-green-500 rounded">
+                            <label class="ml-3 theme-text-light-gray text-base">Acta de Acciones</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Summary -->
+            <div id="progress-summary" class="theme-card-bg border theme-border-green rounded-xl p-6 shadow-md hidden">
+                <h2 class="text-2xl font-bold theme-accent-green mb-4">Resumen de Progreso</h2>
+                <div class="progress-bar-container mb-4">
+                    <div id="completion-progress-bar" class="progress-bar">0%</div>
+                </div>
+                <h3 class="text-xl font-semibold theme-text-light-gray mb-3">Elementos Faltantes:</h3>
+                <ul id="missing-items-list" class="space-y-2 theme-text-light-gray text-base list-disc pl-5"></ul>
+                <p id="all-completed-message" class="theme-strong-green-bg theme-text-white font-bold text-lg hidden mt-4 p-2 rounded-md text-center">Todos los elementos estan completos.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    // =====================================================
+    // SUPABASE INITIALIZATION
+    // =====================================================
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // =====================================================
+    // APPLICATION STATE
+    // =====================================================
+    let currentUser = null;
+    let currentEmpresaId = null;
+    let empresasList = [];
+    let recaudosCache = {};       // { nombre_recaudo: { id, estado_booleano, metadata_json } }
+    let realtimeChannel = null;
+    let saveQueue = Promise.resolve();
+    let syncIndicatorTimeout = null;
+
+    const STORAGE_BUCKET = 'documentos';
+
+    // All checkbox-based recaudos
+    const CHECKBOX_RECAUDOS = [
+        'legal-ubicaciones', 'legal-permisos', 'legal-empresa-matrix',
+        'financiero-islr', 'financiero-estado-resultado', 'financiero-balance-general', 'financiero-auditorias',
+        'admin-ct-accionistas', 'admin-rif-accionistas', 'admin-cv-accionistas',
+        'admin-rif-bancarios', 'admin-rif-compania', 'admin-gobierno-corporativo',
+        'actividad-estrategias-mercado', 'actividad-garantia', 'actividad-libro-cv',
+        'actividad-maquinaria-equipos', 'actividad-poliza', 'actividad-ventas',
+        'actividad-direcciones-sedes', 'actividad-matrix-riesgo',
+        'emisor-oportunidad-inversion',
+        'recaudos-descripcion-actividad', 'recaudos-capacidad-instalada', 'recaudos-linea-productos',
+        'recaudos-ventas-reales-estimadas', 'recaudos-evolucion-precios', 'recaudos-estructura-costos',
+        'recaudos-estrategia-marketing', 'recaudos-desarrollo-nuevos-productos', 'recaudos-poliza-seguro',
+        'emisor-prospecto', 'emisor-telefono-sedes', 'emisor-marcas-rs-productos',
+        'emisor-propiedades', 'emisor-clientes-proveedores', 'emisor-proveedores-costo',
+        'emisor-hoja-terminos', 'emisor-aviso-prensa', 'emisor-macrotitulo',
+        'emisor-certificado-acta-constitutiva', 'emisor-acta-acciones'
+    ];
+
+    // Dynamic list recaudos (tracked as single entries with items in metadata_json)
+    const LIST_RECAUDOS = [
+        { key: 'legal-actas', label: 'Acta Constitutiva', listId: 'list-acta-constitutiva', type: 'file' },
+        { key: 'legal-aumentos', label: 'Aumento de Capital', listId: 'list-aumento-capital', type: 'file' },
+        { key: 'admin-licencias', label: 'Licencias', listId: 'list-licencias', type: 'text' },
+        { key: 'admin-rrhh', label: 'Items de RRHH', listId: 'list-rrhh-items', type: 'text' },
+        { key: 'actividad-marcas', label: 'Marcas y Redes Sociales', listId: 'list-marcas-rrss', type: 'marca' }
+    ];
+
+    // Number input recaudos
+    const NUMBER_RECAUDOS = [
+        'admin-num-accionistas',
+        'actividad-maquinaria-valor-unitario', 'actividad-maquinaria-valor-mercado',
+        'actividad-ventas-monto'
+    ];
+
+    // =====================================================
+    // UI HELPERS
+    // =====================================================
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    function showMsg(text, type) {
+        const box = $('#message-box');
+        const cls = type === 'success' ? 'bg-green-700 text-white border-green-800'
+                  : type === 'error'   ? 'bg-red-700 text-white border-red-800'
+                  : 'bg-blue-700 text-white border-blue-800';
+        box.textContent = text;
+        box.className = `mt-4 p-3 rounded-lg text-sm ${cls} border`;
+        box.classList.remove('hidden');
+        setTimeout(() => box.classList.add('hidden'), 4000);
+    }
+
+    function showSync(state) {
+        const el = $('#sync-indicator');
+        clearTimeout(syncIndicatorTimeout);
+        el.className = 'sync-indicator ' + (state === 'saving' ? 'sync-saving' : state === 'error' ? 'sync-error' : 'sync-ok');
+        el.textContent = state === 'saving' ? 'Guardando...' : state === 'error' ? 'Error de sincronizacion' : 'Sincronizado';
+        el.style.opacity = '1';
+        if (state === 'ok') {
+            syncIndicatorTimeout = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+        }
+    }
+
+    // =====================================================
+    // AUTHENTICATION
+    // =====================================================
+    async function handleLogin(e) {
+        e.preventDefault();
+        const email = $('#login-email').value.trim();
+        const password = $('#login-password').value;
+        const errDiv = $('#login-error');
+        const btn = $('#login-btn');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Verificando...';
+        errDiv.classList.add('hidden');
+
+        try {
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            currentUser = data.user;
+            showDashboard();
+        } catch (err) {
+            errDiv.textContent = 'Error: ' + (err.message || 'Credenciales incorrectas');
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Iniciar Sesion';
+        }
+    }
+
+    async function handleLogout() {
+        unsubscribeRealtime();
+        await sb.auth.signOut();
+        currentUser = null;
+        currentEmpresaId = null;
+        $('#login-screen').classList.remove('hidden');
+        $('#app-wrapper').classList.add('hidden');
+        $('#app-wrapper').classList.remove('show');
+    }
+
+    async function checkSession() {
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+            currentUser = user;
+            showDashboard();
+        }
+    }
+
+    function showDashboard() {
+        $('#login-screen').classList.add('hidden');
+        $('#app-wrapper').classList.remove('hidden');
+        setTimeout(() => $('#app-wrapper').classList.add('show'), 50);
+
+        const meta = currentUser.user_metadata || {};
+        const displayName = meta.full_name || meta.name || currentUser.email;
+        $('#user-display').textContent = `${displayName}, Departamento de Tesoreria`;
+
+        loadEmpresas();
+    }
+
+    // =====================================================
+    // EMPRESAS CRUD
+    // =====================================================
+    async function loadEmpresas() {
+        try {
+            const { data, error } = await sb
+                .from('empresas')
+                .select('*')
+                .eq('usuario_id', currentUser.id)
+                .order('fecha_creacion', { ascending: false });
+            if (error) throw error;
+            empresasList = data || [];
+            renderCompanySelect();
+        } catch (err) {
+            showMsg('Error cargando empresas: ' + err.message, 'error');
+        }
+    }
+
+    function renderCompanySelect() {
+        const sel = $('#company-select');
+        sel.innerHTML = '<option value="">-- Seleccionar Empresa --</option>';
+        empresasList.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id;
+            opt.textContent = e.nombre;
+            sel.appendChild(opt);
+        });
+        if (currentEmpresaId) {
+            sel.value = currentEmpresaId;
+        }
+    }
+
+    async function addEmpresa() {
+        const name = $('#new-company-name').value.trim();
+        if (!name) { showMsg('Ingresa un nombre para la empresa.', 'info'); return; }
+        if (empresasList.some(e => e.nombre === name)) { showMsg('Ya existe esa empresa.', 'error'); return; }
+
+        showSync('saving');
+        try {
+            const { data, error } = await sb
+                .from('empresas')
+                .insert([{ nombre: name, usuario_id: currentUser.id }])
+                .select()
+                .single();
+            if (error) throw error;
+            empresasList.unshift(data);
+            currentEmpresaId = data.id;
+            renderCompanySelect();
+            $('#new-company-name').value = '';
+            await selectEmpresa(data.id);
+            showMsg(`Empresa "${name}" creada.`, 'success');
+            showSync('ok');
+        } catch (err) {
+            showMsg('Error creando empresa: ' + err.message, 'error');
+            showSync('error');
+        }
+    }
+
+    async function deleteEmpresa() {
+        if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+        const empresa = empresasList.find(e => e.id === currentEmpresaId);
+        if (!confirm(`Eliminar "${empresa?.nombre}" y todos sus datos?`)) return;
+
+        showSync('saving');
+        try {
+            // Delete related recaudos first
+            await sb.from('recaudos').delete().eq('empresa_id', currentEmpresaId);
+            const { error } = await sb.from('empresas').delete().eq('id', currentEmpresaId);
+            if (error) throw error;
+
+            empresasList = empresasList.filter(e => e.id !== currentEmpresaId);
+            currentEmpresaId = null;
+            unsubscribeRealtime();
+            renderCompanySelect();
+            $('#recaudos-section').classList.add('hidden');
+            $('#progress-summary').classList.add('hidden');
+            resetUI();
+            showMsg('Empresa eliminada.', 'success');
+            showSync('ok');
+        } catch (err) {
+            showMsg('Error eliminando: ' + err.message, 'error');
+            showSync('error');
+        }
+    }
+
+    async function selectEmpresa(empresaId) {
+        if (!empresaId) {
+            currentEmpresaId = null;
+            $('#recaudos-section').classList.add('hidden');
+            $('#progress-summary').classList.add('hidden');
+            resetUI();
+            return;
+        }
+        currentEmpresaId = empresaId;
+        $('#company-select').value = empresaId;
+        resetUI();
+        await loadRecaudos();
+        subscribeRealtime();
+        $('#recaudos-section').classList.remove('hidden');
+        $('#progress-summary').classList.remove('hidden');
+    }
+
+    // =====================================================
+    // RECAUDOS CRUD & SYNC
+    // =====================================================
+    async function loadRecaudos() {
+        try {
+            const { data, error } = await sb
+                .from('recaudos')
+                .select('*')
+                .eq('empresa_id', currentEmpresaId);
+            if (error) throw error;
+
+            recaudosCache = {};
+            (data || []).forEach(r => {
+                recaudosCache[r.nombre_recaudo] = {
+                    id: r.id,
+                    estado_booleano: r.estado_booleano,
+                    metadata_json: r.metadata_json || {}
+                };
+            });
+            populateUIFromCache();
+        } catch (err) {
+            showMsg('Error cargando recaudos: ' + err.message, 'error');
+        }
+    }
+
+    function populateUIFromCache() {
+        // Checkboxes
+        $$('.recaudo-checkbox').forEach(cb => {
+            const key = cb.dataset.recaudo;
+            const cached = recaudosCache[key];
+            if (cached) {
+                // Check if N/A
+                if (cached.metadata_json && cached.metadata_json.aplica === false) {
+                    cb.checked = false;
+                } else {
+                    cb.checked = cached.estado_booleano;
+                }
+            } else {
+                cb.checked = false;
+            }
+        });
+
+        // Empresa Matrix button
+        const matrixCached = recaudosCache['legal-empresa-matrix'];
+        const matrixBtn = $('#btn-empresa-matrix');
+        matrixBtn.classList.remove('aplica', 'no-aplica');
+        matrixBtn.textContent = 'Aplica / No Aplica';
+        if (matrixCached && matrixCached.metadata_json) {
+            if (matrixCached.metadata_json.aplica === true) {
+                matrixBtn.classList.add('aplica');
+                matrixBtn.textContent = 'Aplica';
+            } else if (matrixCached.metadata_json.aplica === false) {
+                matrixBtn.classList.add('no-aplica');
+                matrixBtn.textContent = 'No Aplica';
+            }
+        }
+
+        // Number inputs
+        $$('.recaudo-number').forEach(inp => {
+            const key = inp.dataset.recaudo;
+            const cached = recaudosCache[key];
+            inp.value = (cached && cached.metadata_json && cached.metadata_json.value != null) ? cached.metadata_json.value : '';
+        });
+
+        // Dynamic lists
+        LIST_RECAUDOS.forEach(lr => {
+            const cached = recaudosCache[lr.key];
+            const items = (cached && cached.metadata_json && cached.metadata_json.items) ? cached.metadata_json.items : [];
+            renderListItems(lr.listId, items, lr.key, lr.type);
+        });
+
+        checkMatrixActaValidity();
+        updateProgress();
+    }
+
+    // Save a single recaudo to Supabase (queued to avoid race conditions)
+    function queueSave(nombreRecaudo, estadoBooleano, metadataJson) {
+        saveQueue = saveQueue.then(() => saveRecaudo(nombreRecaudo, estadoBooleano, metadataJson)).catch(() => {});
+    }
+
+    async function saveRecaudo(nombreRecaudo, estadoBooleano, metadataJson) {
+        if (!currentEmpresaId) return;
+        showSync('saving');
+        try {
+            const existing = recaudosCache[nombreRecaudo];
+            let result;
+            if (existing && existing.id) {
+                const { data, error } = await sb
+                    .from('recaudos')
+                    .update({ estado_booleano: estadoBooleano, metadata_json: metadataJson })
+                    .eq('id', existing.id)
+                    .select()
+                    .single();
+                if (error) throw error;
+                result = data;
+            } else {
+                const { data, error } = await sb
+                    .from('recaudos')
+                    .insert([{
+                        empresa_id: currentEmpresaId,
+                        nombre_recaudo: nombreRecaudo,
+                        estado_booleano: estadoBooleano,
+                        metadata_json: metadataJson
+                    }])
+                    .select()
+                    .single();
+                if (error) throw error;
+                result = data;
+            }
+            recaudosCache[nombreRecaudo] = {
+                id: result.id,
+                estado_booleano: result.estado_booleano,
+                metadata_json: result.metadata_json || {}
+            };
+            showSync('ok');
+        } catch (err) {
+            console.error('Save error:', err);
+            showSync('error');
+        }
+    }
+
+    async function deleteRecaudoByName(nombreRecaudo) {
+        if (!currentEmpresaId) return;
+        showSync('saving');
+        try {
+            await sb.from('recaudos').delete()
+                .eq('empresa_id', currentEmpresaId)
+                .eq('nombre_recaudo', nombreRecaudo);
+            delete recaudosCache[nombreRecaudo];
+            showSync('ok');
+        } catch (err) {
+            showSync('error');
+        }
+    }
+
+    // =====================================================
+    // REAL-TIME SUBSCRIPTION
+    // =====================================================
+    function subscribeRealtime() {
+        unsubscribeRealtime();
+        if (!currentEmpresaId) return;
+
+        realtimeChannel = sb
+            .channel(`recaudos-live-${currentEmpresaId}`)
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'recaudos', filter: `empresa_id=eq.${currentEmpresaId}` },
+                (payload) => {
+                    if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                        const r = payload.new;
+                        recaudosCache[r.nombre_recaudo] = {
+                            id: r.id,
+                            estado_booleano: r.estado_booleano,
+                            metadata_json: r.metadata_json || {}
+                        };
+                    } else if (payload.eventType === 'DELETE') {
+                        const r = payload.old;
+                        if (r && r.nombre_recaudo) delete recaudosCache[r.nombre_recaudo];
+                    }
+                    populateUIFromCache();
+                }
+            )
+            .subscribe();
+    }
+
+    function unsubscribeRealtime() {
+        if (realtimeChannel) {
+            sb.removeChannel(realtimeChannel);
+            realtimeChannel = null;
+        }
+    }
+
+    // =====================================================
+    // FILE UPLOAD TO SUPABASE STORAGE
+    // =====================================================
+    async function uploadFileToStorage(file) {
+        if (!currentUser || !currentEmpresaId) return null;
+        const ext = file.name.split('.').pop();
+        const path = `${currentUser.id}/${currentEmpresaId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        showSync('saving');
+        try {
+            const { data, error } = await sb.storage
+                .from(STORAGE_BUCKET)
+                .upload(path, file, { cacheControl: '3600', upsert: true });
+            if (error) throw error;
+            showSync('ok');
+            return path;
+        } catch (err) {
+            console.error('Upload error:', err);
+            showSync('error');
+            showMsg('Error subiendo archivo: ' + err.message, 'error');
+            return null;
+        }
+    }
+
+    async function deleteFileFromStorage(filePath) {
+        if (!filePath) return;
+        try {
+            await sb.storage.from(STORAGE_BUCKET).remove([filePath]);
+        } catch (err) {
+            console.error('Delete file error:', err);
+        }
+    }
+
+    // =====================================================
+    // DYNAMIC LIST RENDERING
+    // =====================================================
+    function renderListItems(listId, items, dataKey, type) {
+        const ul = document.getElementById(listId);
+        ul.innerHTML = '';
+        if (!items || items.length === 0) return;
+
+        items.forEach((item, idx) => {
+            const li = document.createElement('li');
+            li.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 bg-gray-900 rounded-md border border-green-700';
+
+            let content = '';
+            if (type === 'file') {
+                content = `<strong class="theme-text-light-gray">Fecha:</strong> <span>${item.date || 'N/A'}</span> | <strong class="theme-text-light-gray">Archivo:</strong> <span>${item.fileName || 'No anexado'}</span>`;
+            } else if (type === 'text') {
+                content = `<strong class="theme-text-light-gray">${item.name || 'N/A'}</strong>`;
+            } else if (type === 'marca') {
+                content = `<div>
+                    <strong class="theme-text-light-gray">Marca:</strong> <span>${item.brandName || 'N/A'}</span><br>
+                    <strong class="theme-text-light-gray">Archivo:</strong> <span>${item.fileName || 'No anexado'}</span><br>
+                    <strong class="theme-text-light-gray">RRSS:</strong> <a href="${item.rrssLink || '#'}" target="_blank" class="theme-accent-green hover:underline">${item.rrssLink || 'N/A'}</a>
+                </div>`;
+            }
+
+            li.innerHTML = `
+                <span class="theme-text-light-gray">${content}</span>
+                <button type="button" class="remove-item-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600 mt-2 sm:mt-0"
+                    data-index="${idx}" data-key="${dataKey}" data-list="${listId}" data-type="${type}"
+                    ${item.filePath ? 'data-filepath="' + item.filePath + '"' : ''}>
+                    Eliminar
+                </button>`;
+            ul.appendChild(li);
+        });
+    }
+
+    function getListItems(dataKey) {
+        const cached = recaudosCache[dataKey];
+        return (cached && cached.metadata_json && cached.metadata_json.items) ? [...cached.metadata_json.items] : [];
+    }
+
+    async function addListItem(dataKey, listId, type, newItem) {
+        const items = getListItems(dataKey);
+        items.push(newItem);
+        const hasItems = items.length > 0;
+        queueSave(dataKey, hasItems, { items });
+        // Optimistic update
+        recaudosCache[dataKey] = recaudosCache[dataKey] || {};
+        recaudosCache[dataKey].estado_booleano = hasItems;
+        recaudosCache[dataKey].metadata_json = { items };
+        renderListItems(listId, items, dataKey, type);
+        updateProgress();
+        checkMatrixActaValidity();
+    }
+
+    async function removeListItem(dataKey, listId, type, index, filePath) {
+        if (!confirm('Eliminar este item?')) return;
+        const items = getListItems(dataKey);
+        if (filePath) await deleteFileFromStorage(filePath);
+        items.splice(index, 1);
+        const hasItems = items.length > 0;
+
+        if (items.length === 0) {
+            await deleteRecaudoByName(dataKey);
+        } else {
+            queueSave(dataKey, hasItems, { items });
+        }
+        recaudosCache[dataKey] = recaudosCache[dataKey] || {};
+        recaudosCache[dataKey].estado_booleano = hasItems;
+        recaudosCache[dataKey].metadata_json = { items };
+        renderListItems(listId, items, dataKey, type);
+        updateProgress();
+        checkMatrixActaValidity();
+        showMsg('Item eliminado.', 'success');
+    }
+
+    // =====================================================
+    // PROGRESS CALCULATION FROM DATABASE
+    // =====================================================
+    function updateProgress() {
+        if (!currentEmpresaId) {
+            $('#completion-progress-bar').style.width = '0%';
+            $('#completion-progress-bar').textContent = '0%';
+            $('#missing-items-list').innerHTML = '';
+            return;
+        }
+
+        let total = 0;
+        let completed = 0;
+        const missingUl = $('#missing-items-list');
+        missingUl.innerHTML = '';
+        $('#all-completed-message').classList.add('hidden');
+
+        // 1. Checkbox recaudos
+        $$('.recaudo-checkbox').forEach(cb => {
+            const key = cb.dataset.recaudo;
+            const cached = recaudosCache[key];
+            const label = cb.parentElement.querySelector('label')?.textContent?.trim() || key;
+
+            // Aplica/No Aplica logic: if 'no-aplica', mark as N/A and skip
+            if (key === 'legal-empresa-matrix') {
+                const meta = cached?.metadata_json || {};
+                if (meta.aplica === false) {
+                    // N/A: does not count towards total
+                    return;
+                }
+            }
+
+            total++;
+            if (cached && cached.estado_booleano) {
+                completed++;
+            } else {
+                const li = document.createElement('li');
+                li.textContent = label;
+                li.className = 'theme-text-light-gray';
+                missingUl.appendChild(li);
+            }
+        });
+
+        // 2. Number input recaudos
+        $$('.recaudo-number').forEach(inp => {
+            const key = inp.dataset.recaudo;
+            const cached = recaudosCache[key];
+            const hasValue = cached && cached.metadata_json && cached.metadata_json.value != null && cached.metadata_json.value !== '';
+            total++;
+            if (hasValue) {
+                completed++;
+            } else {
+                const li = document.createElement('li');
+                li.textContent = inp.placeholder || key;
+                li.className = 'theme-text-light-gray';
+                missingUl.appendChild(li);
+            }
+        });
+
+        // 3. Dynamic lists
+        LIST_RECAUDOS.forEach(lr => {
+            total++;
+            const cached = recaudosCache[lr.key];
+            const hasItems = cached && cached.metadata_json && cached.metadata_json.items && cached.metadata_json.items.length > 0;
+            if (hasItems) {
+                completed++;
+            } else {
+                const li = document.createElement('li');
+                li.textContent = lr.label;
+                li.className = 'theme-text-light-gray';
+                missingUl.appendChild(li);
+            }
+        });
+
+        const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const bar = $('#completion-progress-bar');
+        bar.style.width = pct + '%';
+        bar.textContent = pct + '%';
+
+        if (total > 0 && completed === total) {
+            $('#all-completed-message').classList.remove('hidden');
+        }
+    }
+
+    // =====================================================
+    // APLICA / NO APLICA LOGIC
+    // =====================================================
+    function checkMatrixActaValidity() {
+        const matrixCached = recaudosCache['legal-empresa-matrix'];
+        const actaCached = recaudosCache['legal-actas'];
+        const statusEl = $('#matrix-acta-display-status');
+
+        statusEl.classList.add('hidden');
+        statusEl.classList.remove('status-positive', 'status-negative');
+
+        if (!matrixCached) return;
+
+        const aplica = matrixCached.metadata_json?.aplica;
+        const isChecked = matrixCached.estado_booleano;
+        const hasActas = actaCached?.metadata_json?.items?.length > 0;
+
+        if (isChecked && aplica === true) {
+            statusEl.classList.remove('hidden');
+            if (hasActas) {
+                statusEl.textContent = 'Acta Constitutiva presente';
+                statusEl.classList.add('status-positive');
+            } else {
+                statusEl.textContent = 'Falta Acta Constitutiva';
+                statusEl.classList.add('status-negative');
+            }
+        }
+    }
+
+    function handleMatrixToggle() {
+        if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+
+        const btn = $('#btn-empresa-matrix');
+        const cached = recaudosCache['legal-empresa-matrix'] || { estado_booleano: false, metadata_json: {} };
+        let newAplica;
+
+        if (btn.classList.contains('aplica')) {
+            btn.classList.remove('aplica');
+            btn.classList.add('no-aplica');
+            btn.textContent = 'No Aplica';
+            newAplica = false;
+        } else if (btn.classList.contains('no-aplica')) {
+            btn.classList.remove('no-aplica');
+            btn.textContent = 'Aplica / No Aplica';
+            newAplica = null;
+        } else {
+            btn.classList.add('aplica');
+            btn.textContent = 'Aplica';
+            newAplica = true;
+        }
+
+        const meta = { ...cached.metadata_json, aplica: newAplica };
+        queueSave('legal-empresa-matrix', cached.estado_booleano, meta);
+        recaudosCache['legal-empresa-matrix'] = { ...cached, metadata_json: meta };
+        checkMatrixActaValidity();
+        updateProgress();
+    }
+
+    // =====================================================
+    // RESET UI
+    // =====================================================
+    function resetUI() {
+        $$('.recaudo-checkbox').forEach(cb => cb.checked = false);
+        $$('.recaudo-number').forEach(inp => inp.value = '');
+        $$('.file-input-display').forEach(sp => sp.textContent = '');
+        LIST_RECAUDOS.forEach(lr => { document.getElementById(lr.listId).innerHTML = ''; });
+        const matrixBtn = $('#btn-empresa-matrix');
+        matrixBtn.classList.remove('aplica', 'no-aplica');
+        matrixBtn.textContent = 'Aplica / No Aplica';
+        $('#matrix-acta-display-status').classList.add('hidden');
+        recaudosCache = {};
+        // Close all folders
+        $$('.folder-content').forEach(fc => fc.classList.add('hidden'));
+        $$('.folder-header').forEach(fh => { fh.classList.remove('expanded'); fh.querySelector('svg')?.classList.remove('rotate-180'); });
+        updateProgress();
+    }
+
+    // =====================================================
+    // FILE INPUT DISPLAY HELPER
+    // =====================================================
+    function setupFileDisplay(inputId, spanId) {
+        const inp = document.getElementById(inputId);
+        if (!inp) return;
+        inp.addEventListener('change', () => {
+            const span = document.getElementById(spanId);
+            span.textContent = inp.files.length > 0 ? inp.files[0].name : '';
+        });
+    }
+
+    // =====================================================
+    // EVENT LISTENERS
+    // =====================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check existing session
+        checkSession();
+
+        // Auth
+        $('#login-form').addEventListener('submit', handleLogin);
+        $('#logout-btn').addEventListener('click', handleLogout);
+
+        // Empresas
+        $('#add-company-btn').addEventListener('click', addEmpresa);
+        $('#delete-company-btn').addEventListener('click', deleteEmpresa);
+        $('#company-select').addEventListener('change', (e) => selectEmpresa(e.target.value || null));
+
+        // Folder toggles
+        $$('.folder').forEach(folder => {
+            folder.querySelector('.folder-header').addEventListener('click', () => {
+                if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+                const content = folder.querySelector('.folder-content');
+                const header = folder.querySelector('.folder-header');
+                content.classList.toggle('hidden');
+                header.classList.toggle('expanded');
+                header.querySelector('svg').classList.toggle('rotate-180');
+            });
+        });
+
+        // Checkbox changes -> save to Supabase instantly
+        $$('.recaudo-checkbox').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (!currentEmpresaId) return;
+                const key = cb.dataset.recaudo;
+                const cached = recaudosCache[key] || { metadata_json: {} };
+                const meta = cached.metadata_json || {};
+                queueSave(key, cb.checked, meta);
+                recaudosCache[key] = { ...cached, estado_booleano: cb.checked, metadata_json: meta };
+                updateProgress();
+                if (key === 'legal-empresa-matrix') checkMatrixActaValidity();
+            });
+        });
+
+        // Number input changes -> save to Supabase
+        $$('.recaudo-number').forEach(inp => {
+            let debounce;
+            inp.addEventListener('input', () => {
+                if (!currentEmpresaId) return;
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    const key = inp.dataset.recaudo;
+                    const val = inp.value;
+                    const hasValue = val !== '';
+                    queueSave(key, hasValue, { value: val });
+                    recaudosCache[key] = { ...(recaudosCache[key] || {}), estado_booleano: hasValue, metadata_json: { value: val } };
+                    updateProgress();
+                }, 400);
+            });
+        });
+
+        // Empresa Matrix toggle
+        $('#btn-empresa-matrix').addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleMatrixToggle();
+        });
+
+        // File input displays
+        setupFileDisplay('file-acta-constitutiva', 'acta-constitutiva-file-name');
+        setupFileDisplay('file-aumento-capital', 'aumento-capital-file-name');
+        setupFileDisplay('file-marca-document', 'marca-document-file-name');
+
+        // ---- ADD ACTA CONSTITUTIVA ----
+        $('#add-acta-constitutiva-btn').addEventListener('click', async () => {
+            if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+            const dateInput = $('#acta-constitutiva-date');
+            const fileInput = document.getElementById('file-acta-constitutiva');
+            const fileSpan = $('#acta-constitutiva-file-name');
+            const date = dateInput.value;
+            const file = fileInput.files[0];
+
+            if (!date && !file) { showMsg('Ingresa fecha o archivo.', 'info'); return; }
+
+            let filePath = null;
+            let fileName = '';
+            if (file) {
+                filePath = await uploadFileToStorage(file);
+                fileName = file.name;
+            }
+
+            await addListItem('legal-actas', 'list-acta-constitutiva', 'file', { date, fileName, filePath });
+            dateInput.value = '';
+            fileInput.value = '';
+            fileSpan.textContent = '';
+            showMsg('Acta constitutiva anadida.', 'success');
+        });
+
+        // ---- ADD AUMENTO DE CAPITAL ----
+        $('#add-aumento-capital-btn').addEventListener('click', async () => {
+            if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+            const dateInput = $('#aumento-capital-date');
+            const fileInput = document.getElementById('file-aumento-capital');
+            const fileSpan = $('#aumento-capital-file-name');
+            const date = dateInput.value;
+            const file = fileInput.files[0];
+
+            if (!date && !file) { showMsg('Ingresa fecha o archivo.', 'info'); return; }
+
+            let filePath = null;
+            let fileName = '';
+            if (file) {
+                filePath = await uploadFileToStorage(file);
+                fileName = file.name;
+            }
+
+            await addListItem('legal-aumentos', 'list-aumento-capital', 'file', { date, fileName, filePath });
+            dateInput.value = '';
+            fileInput.value = '';
+            fileSpan.textContent = '';
+            showMsg('Aumento de capital anadido.', 'success');
+        });
+
+        // ---- ADD LICENCIA ----
+        $('#add-licencia-btn').addEventListener('click', async () => {
+            if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+            const inp = $('#admin-licencia-name');
+            const name = inp.value.trim();
+            if (!name) { showMsg('Ingresa nombre de licencia.', 'info'); return; }
+            await addListItem('admin-licencias', 'list-licencias', 'text', { name });
+            inp.value = '';
+            showMsg('Licencia anadida.', 'success');
+        });
+
+        // ---- ADD RRHH ITEM ----
+        $('#add-rrhh-item-btn').addEventListener('click', async () => {
+            if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+            const inp = $('#admin-rrhh-item-name');
+            const name = inp.value.trim();
+            if (!name) { showMsg('Ingresa item RRHH.', 'info'); return; }
+            await addListItem('admin-rrhh', 'list-rrhh-items', 'text', { name });
+            inp.value = '';
+            showMsg('Item RRHH anadido.', 'success');
+        });
+
+        // ---- ADD MARCA Y RRSS ----
+        $('#add-marca-rrss-btn').addEventListener('click', async () => {
+            if (!currentEmpresaId) { showMsg('Selecciona una empresa.', 'info'); return; }
+            const brandInp = $('#actividad-marca-name');
+            const fileInput = document.getElementById('file-marca-document');
+            const fileSpan = $('#marca-document-file-name');
+            const rrssInp = $('#actividad-rrss-link');
+
+            const brandName = brandInp.value.trim();
+            const file = fileInput.files[0];
+            const rrssLink = rrssInp.value.trim();
+
+            if (!brandName && !file && !rrssLink) { showMsg('Completa al menos un campo.', 'info'); return; }
+
+            let filePath = null;
+            let fileName = '';
+            if (file) {
+                filePath = await uploadFileToStorage(file);
+                fileName = file.name;
+            }
+
+            await addListItem('actividad-marcas', 'list-marcas-rrss', 'marca', { brandName, fileName, filePath, rrssLink });
+            brandInp.value = '';
+            fileInput.value = '';
+            fileSpan.textContent = '';
+            rrssInp.value = '';
+            showMsg('Marca anadida.', 'success');
+        });
+
+        // ---- REMOVE LIST ITEMS (delegated) ----
+        $$('.folder-content').forEach(fc => {
+            fc.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-item-btn') && currentEmpresaId) {
+                    const idx = parseInt(e.target.dataset.index);
+                    const key = e.target.dataset.key;
+                    const listId = e.target.dataset.list;
+                    const type = e.target.dataset.type;
+                    const filePath = e.target.dataset.filepath || null;
+                    removeListItem(key, listId, type, idx, filePath);
+                }
+            });
+        });
+
+        // Handle delegated clicks on progress summary remove buttons too
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-item-btn') && currentEmpresaId) {
+                const idx = parseInt(e.target.dataset.index);
+                const key = e.target.dataset.key;
+                const listId = e.target.dataset.list;
+                const type = e.target.dataset.type;
+                const filePath = e.target.dataset.filepath || null;
+                if (key && listId) removeListItem(key, listId, type, idx, filePath);
+            }
+        });
+    });
+    </script>
+</body>
+</html>
