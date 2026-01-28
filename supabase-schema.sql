@@ -3,9 +3,6 @@
 -- Execute this SQL in your Supabase SQL Editor
 -- =====================================================
 
--- Enable Row Level Security
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
-
 -- =====================================================
 -- TABLE: empresas
 -- Stores company information for each user
