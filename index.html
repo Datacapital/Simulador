@@ -1,998 +1,545 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Per Capital | Simulador Papeles Comerciales</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <!-- Decimal.js para cálculos financieros de alta precisión -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per Capital | Tesoreria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #0a0f2c;
-            --secondary: #475569;
-            --accent: #2563eb;
-            --card: #FFFFFF;
-            --text: #0f172a;
-            --border: #1e3a8a;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050a1a; color: var(--text); padding: 12px; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:#0A1128; margin:0; min-height:100vh; }
+        .login-container { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
+        .theme-card-bg { background-color:#1A253F; }
+        .theme-border-green { border-color:#34D399; }
+        .theme-accent-green { color:#34D399; }
+        .theme-text-white { color:#FFF; }
+        .theme-text-light-gray { color:#E5E7EB; }
+        .theme-strong-green-bg { background-color:#10B981; }
+        .theme-dark-blue-bg { background-color:#0A1128; }
+        .theme-folder-header-bg { background-color:#2A3F5B; }
+        .spinner { border:3px solid #1A253F; border-top:3px solid #34D399; border-radius:50%; width:20px; height:20px; animation:spin .8s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .tab-btn { padding:10px 24px; font-weight:700; font-size:.95rem; border:none; cursor:pointer; border-bottom:3px solid transparent; background:transparent; color:#9CA3AF; transition:all .2s; }
+        .tab-btn.active { color:#34D399; border-bottom-color:#34D399; }
+        .tab-btn:hover { color:#FFF; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .sync-indicator { position:fixed; top:16px; right:16px; padding:6px 14px; border-radius:8px; font-size:.75rem; font-weight:600; z-index:1000; transition:opacity .3s; }
+        .sync-ok { background:#065f46; color:#34D399; }
+        .sync-saving { background:#92400e; color:#fbbf24; }
+        .sync-error { background:#7f1d1d; color:#fca5a5; }
+        .btn-toggle { transition:all .2s; }
+        .btn-toggle.aplica { background:#10B981; color:#fff; }
+        .btn-toggle.no-aplica { background:#ef4444; color:#fff; }
+        .file-input-label { cursor:pointer; padding:.5rem 1rem; border-radius:.375rem; background:#10B981; color:#fff; transition:background .2s; }
+        .file-input-label:hover { background:#059669; }
+        .file-input-display { display:inline-block; margin-left:.5rem; font-size:.875rem; color:#9CA3AF; }
+        .folder-header { box-shadow:0 1px 3px rgba(0,0,0,.1); transition:transform .2s,box-shadow .2s; cursor:pointer; }
+        .folder-header:hover { transform:translateY(-1px); box-shadow:0 4px 6px rgba(0,0,0,.1); }
+        .folder-header svg { transition:transform .3s; }
+        .folder-header.expanded svg { transform:rotate(180deg); }
+        .status-positive { color:#10B981; }
+        .status-negative { color:#dc2626; }
+        .progress-bar-container { width:100%; background:#1A253F; border-radius:9999px; overflow:hidden; height:1.5rem; }
+        .progress-bar { height:100%; background:#10B981; width:0%; border-radius:9999px; text-align:center; color:#fff; font-weight:bold; line-height:1.5rem; transition:width .5s; }
+        /* Simulator styles */
+        .sim-wrap { display:grid; grid-template-columns:480px 1fr; min-height:80vh; background:#fff; border-radius:14px; overflow:hidden; border:2px solid #1e3a8a; }
+        .sim-sidebar { background:#f1f5f9; padding:20px; border-right:2px solid #1e3a8a; overflow-y:auto; max-height:80vh; }
+        .sim-main { padding:25px; background:#fff; overflow-y:auto; max-height:80vh; }
+        .sim-wrap .section-title { font-size:.7rem; font-weight:900; color:#1d4ed8; text-transform:uppercase; margin:14px 0 10px; letter-spacing:1px; border-bottom:3px solid #2563eb; padding-bottom:4px; }
+        .sim-wrap .form-group { margin-bottom:12px; }
+        .sim-wrap label { display:block; font-size:.7rem; font-weight:800; color:#334155; text-transform:uppercase; margin-bottom:4px; }
+        .sim-wrap input,.sim-wrap select { width:100%; padding:9px 11px; border:2px solid #1e3a8a; border-radius:6px; font-size:.9rem; background:#fff; color:#0a0f2c; font-weight:600; }
+        .sim-wrap input:focus,.sim-wrap select:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+        .sim-wrap .help-text { font-size:.65rem; color:#6366f1; margin-top:3px; line-height:1.3; font-style:italic; background:#eef2ff; padding:4px 6px; border-radius:4px; border-left:2px solid #6366f1; }
+        .sim-wrap .btn-main { width:100%; padding:14px; background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer; margin-top:15px; text-transform:uppercase; font-size:.9rem; letter-spacing:1.5px; }
+        .sim-wrap .btn-main:hover { background:linear-gradient(135deg,#1e40af,#3b82f6); transform:translateY(-2px); }
+        .sim-wrap .detail-table { width:100%; margin-bottom:18px; border-collapse:collapse; }
+        .sim-wrap .detail-table th { background:#0a0f2c; color:#fff; padding:10px; text-align:left; font-size:.8rem; font-weight:800; text-transform:uppercase; }
+        .sim-wrap .detail-table td { padding:9px 10px; border-bottom:1px solid #cbd5e1; font-size:.9rem; color:#1e293b; font-weight:500; }
+        .sim-wrap .detail-table tr:hover { background:#f1f5f9; }
+        .sim-wrap .formula-hint { font-size:.65rem; color:#7c3aed; display:block; margin-top:2px; font-weight:500; }
+        .sim-wrap .category-row { background:#0a0f2c!important; } .sim-wrap .category-row td { color:#fff!important; font-size:.95rem!important; font-weight:900; }
+        .sim-wrap .total-row { background:#1e293b!important; } .sim-wrap .total-row td { color:#fff!important; font-size:1rem!important; font-weight:900; }
+        .sim-wrap .subtotal-row { background:#e2e8f0!important; } .sim-wrap .subtotal-row td { font-size:.95rem!important; font-weight:800; }
+        .sim-wrap .btn-pdf { width:100%; padding:16px; background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer; margin-top:12px; font-size:.95rem; text-transform:uppercase; }
+        .sim-wrap .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#64748b; text-align:center; font-size:1.1rem; }
+        .sim-wrap .summary-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; border-bottom:3px solid #dbeafe; padding-bottom:15px; }
+        .sim-wrap .cost-value { font-size:2.2rem; font-weight:900; color:#0a0f2c; line-height:1; }
+        .sim-wrap .cost-label { font-size:.75rem; font-weight:800; color:#2563eb; text-transform:uppercase; }
+        .sim-wrap .cost-sub { font-size:.95rem; color:#1e40af; font-weight:700; margin-top:4px; }
+        .sim-wrap .condiciones-box { background:#fef3c7; border:2px solid #f59e0b; border-radius:10px; padding:14px; margin:15px 0; }
+        .sim-wrap .condiciones-box h4 { color:#92400e; font-size:.95rem; margin-bottom:8px; text-transform:uppercase; font-weight:800; }
+        .sim-wrap .condiciones-box li { font-size:.85rem; color:#78350f; padding:5px 0; border-bottom:1px dashed #fbbf24; font-weight:600; list-style:none; }
+        .sim-wrap .condiciones-box li::before { content:"•"; color:#f59e0b; font-weight:bold; margin-right:8px; }
+        .sim-wrap .condiciones-box .nota { margin-top:10px; padding-top:8px; border-top:2px solid #f59e0b; font-size:.8rem; color:#92400e; font-style:italic; font-weight:600; }
+        .sim-wrap .flujo-section { margin-top:18px; border-top:3px solid #2563eb; padding-top:15px; }
+        .sim-wrap .flujo-section h3 { color:#0a0f2c; font-size:1.1rem; margin-bottom:12px; font-weight:800; }
+        .sim-wrap .flujo-wrapper { overflow-x:auto; }
+        .sim-wrap .flujo-table { width:100%; border-collapse:collapse; }
+        .sim-wrap .flujo-table th { background:#1e3a8a; color:#fff; padding:7px 4px; text-align:center; font-size:.75rem; white-space:nowrap; font-weight:700; }
+        .sim-wrap .flujo-table td { padding:6px 4px; border:1px solid #cbd5e1; text-align:right; font-size:.75rem; white-space:nowrap; font-weight:600; color:#1e293b; }
+        .sim-wrap .flujo-table .row-label { background:#e2e8f0; font-weight:800; text-align:left; position:sticky; left:0; min-width:85px; color:#0a0f2c; }
+        .sim-wrap .flujo-table .total-row-flujo { background:#dbeafe; font-weight:800; }
+        .sim-wrap .flujo-table .positive { color:#15803d; font-weight:700; }
+        .sim-wrap .flujo-table .negative { color:#dc2626; font-weight:700; }
+        .sim-wrap .precision-info { background:#ecfdf5; border:1px solid #10b981; border-radius:6px; padding:8px 10px; margin:10px 0; font-size:.7rem; color:#065f46; }
+        .sim-wrap .indexada-alert { background:#fef3c7; border:2px solid #f59e0b; border-radius:6px; padding:8px 10px; margin:10px 0; font-size:.7rem; color:#92400e; font-weight:600; }
+        .sim-wrap .logo-upload-section { background:#fef3c7; border-left:5px solid #f59e0b; padding:10px; margin:10px 0; font-size:.8rem; color:#92400e; font-weight:600; }
+        .sim-wrap .logo-upload-section input[type="file"] { margin-top:6px; font-size:.75rem; }
+        .hidden { display:none!important; }
+        @media(max-width:900px) { .sim-wrap { grid-template-columns:1fr; } .sim-sidebar,.sim-main { max-height:none; } }
 
-        .app-container {
-            max-width: 1650px;
-            margin: 0 auto;
-            background: var(--card);
-            border-radius: 14px;
-            box-shadow: 0 25px 60px rgba(37,99,235,0.2);
-            display: grid;
-            grid-template-columns: 480px 1fr;
-            min-height: 95vh;
-            overflow: hidden;
-            border: 2px solid #1e3a8a;
-        }
-
-        .sidebar {
-            background: #f1f5f9;
-            padding: 20px;
-            border-right: 2px solid #1e3a8a;
-            overflow-y: auto;
-            max-height: 95vh;
-        }
-
-        .brand-header { margin-bottom: 15px; }
-        .brand-header h1 {
-            color: #0a0f2c;
-            font-weight: 900;
-            font-size: 1.4rem;
-            border-left: 5px solid #2563eb;
-            padding-left: 12px;
-        }
-        .brand-header p { font-size: 0.75rem; color: #1e40af; margin-top: 3px; padding-left: 17px; font-weight: 600; }
-
-        .section-title {
-            font-size: 0.7rem;
-            font-weight: 900;
-            color: #1d4ed8;
-            text-transform: uppercase;
-            margin: 14px 0 10px 0;
-            letter-spacing: 1px;
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 4px;
-        }
-
-        .form-group { margin-bottom: 12px; position: relative; }
-        label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: #334155;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        input, select {
-            width: 100%;
-            padding: 9px 11px;
-            border: 2px solid #1e3a8a;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            background: white;
-            color: #0a0f2c;
-            font-weight: 600;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
-        }
-
-        /* Tooltips de explicación */
-        .help-text {
-            font-size: 0.65rem;
-            color: #6366f1;
-            margin-top: 3px;
-            line-height: 1.3;
-            font-style: italic;
-            background: #eef2ff;
-            padding: 4px 6px;
-            border-radius: 4px;
-            border-left: 2px solid #6366f1;
-        }
-
-        .btn-main {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 800;
-            cursor: pointer;
-            margin-top: 15px;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 1.5px;
-        }
-        .btn-main:hover { 
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
-        }
-
-        .main-content { padding: 25px; background: white; overflow-y: auto; max-height: 95vh; }
-
-        .empty-state {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; color: #64748b; text-align: center; font-size: 1.1rem;
-        }
-
-        .summary-header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            margin-bottom: 20px; border-bottom: 3px solid #dbeafe; padding-bottom: 15px;
-        }
-        .summary-title-area h2 { font-size: 1.6rem; color: #0a0f2c; font-weight: 900; }
-        .summary-title-area p { color: #1e40af; font-size: 1rem; margin-top: 4px; font-weight: 600; }
-
-        .cost-hero { text-align: right; }
-        .cost-label { font-size: 0.75rem; font-weight: 800; color: #2563eb; text-transform: uppercase; }
-        .cost-value { font-size: 2.2rem; font-weight: 900; color: #0a0f2c; line-height: 1; }
-        .cost-sub { font-size: 0.95rem; color: #1e40af; font-weight: 700; margin-top: 4px; }
-
-        .detail-table { width: 100%; margin-bottom: 18px; border-collapse: collapse; }
-        .detail-table th {
-            background: #0a0f2c; color: white; padding: 10px;
-            text-align: left; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;
-        }
-        .detail-table td { 
-            padding: 9px 10px; border-bottom: 1px solid #cbd5e1; 
-            font-size: 0.9rem; color: #1e293b; font-weight: 500;
-        }
-        .detail-table tr:hover { background: #f1f5f9; }
-
-        /* Explicación de fórmula en tabla (solo simulador) */
-        .formula-hint {
-            font-size: 0.65rem;
-            color: #7c3aed;
-            display: block;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .category-row { background: #0a0f2c !important; font-weight: 900; color: white !important; }
-        .category-row td { color: white !important; font-size: 0.95rem !important; }
-        
-        .total-row { background: #1e293b !important; color: white !important; font-weight: 900; }
-        .total-row td { color: white !important; font-size: 1rem !important; }
-        
-        .subtotal-row { background: #e2e8f0 !important; font-weight: 800; color: #0a0f2c !important; }
-        .subtotal-row td { font-size: 0.95rem !important; }
-
-        .btn-pdf {
-            width: 100%; padding: 16px; 
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-            color: white; border: none; border-radius: 8px; 
-            font-weight: 800; cursor: pointer; margin-top: 12px;
-            font-size: 0.95rem; letter-spacing: 1px; text-transform: uppercase;
-        }
-        .btn-pdf:hover { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%); }
-
-        .hidden { display: none; }
-
-        .logo-upload-section {
-            background: #fef3c7; border-left: 5px solid #f59e0b; padding: 10px;
-            margin: 10px 0; font-size: 0.8rem; color: #92400e; font-weight: 600;
-        }
-        .logo-upload-section input[type="file"] { margin-top: 6px; font-size: 0.75rem; }
-
-        .condiciones-box {
-            background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 14px; margin: 15px 0;
-        }
-        .condiciones-box h4 { color: #92400e; font-size: 0.95rem; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; }
-        .condiciones-box ul { list-style: none; padding: 0; }
-        .condiciones-box li {
-            font-size: 0.85rem; color: #78350f; padding: 5px 0;
-            border-bottom: 1px dashed #fbbf24; display: flex; align-items: flex-start; font-weight: 600;
-        }
-        .condiciones-box li:last-child { border-bottom: none; }
-        .condiciones-box li::before { content: "•"; color: #f59e0b; font-weight: bold; margin-right: 8px; font-size: 1.1rem; }
-        .condiciones-box .nota {
-            margin-top: 10px; padding-top: 8px; border-top: 2px solid #f59e0b;
-            font-size: 0.8rem; color: #92400e; font-style: italic; font-weight: 600;
-        }
-
-        .flujo-section { margin-top: 18px; border-top: 3px solid #2563eb; padding-top: 15px; }
-        .flujo-section h3 { color: #0a0f2c; font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
-        .flujo-wrapper { overflow-x: auto; }
-        .flujo-table { width: 100%; border-collapse: collapse; }
-        .flujo-table th {
-            background: #1e3a8a; color: white; padding: 7px 4px;
-            text-align: center; font-size: 0.75rem; white-space: nowrap; font-weight: 700;
-        }
-        .flujo-table td {
-            padding: 6px 4px; border: 1px solid #cbd5e1;
-            text-align: right; font-size: 0.75rem; white-space: nowrap; font-weight: 600; color: #1e293b;
-        }
-        .flujo-table .row-label {
-            background: #e2e8f0; font-weight: 800; text-align: left;
-            position: sticky; left: 0; min-width: 85px; color: #0a0f2c;
-        }
-        .flujo-table .total-row-flujo { background: #dbeafe; font-weight: 800; }
-        .flujo-table .positive { color: #15803d; font-weight: 700; }
-        .flujo-table .negative { color: #dc2626; font-weight: 700; }
-
-        /* Info box de precisión */
-        .precision-info {
-            background: #ecfdf5;
-            border: 1px solid #10b981;
-            border-radius: 6px;
-            padding: 8px 10px;
-            margin: 10px 0;
-            font-size: 0.7rem;
-            color: #065f46;
-        }
-        .precision-info strong { color: #047857; }
-
-        /* Alerta para emisión indexada */
-        .indexada-alert {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-            border-radius: 6px;
-            padding: 8px 10px;
-            margin: 10px 0;
-            font-size: 0.7rem;
-            color: #92400e;
-            font-weight: 600;
-        }
-        .indexada-alert strong { color: #78350f; }
+        /* Dropdown Navigation */
+        .nav-container { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; padding-bottom:0; border-bottom:1px solid #374151; position:relative; flex-wrap:wrap; }
+        .nav-dropdown { position:relative; display:inline-block; }
+        .nav-dropdown-btn { padding:10px 20px; font-weight:700; font-size:.95rem; border:2px solid #34D399; cursor:pointer; background:transparent; color:#34D399; border-radius:8px; transition:all .2s; display:flex; align-items:center; gap:8px; }
+        .nav-dropdown-btn:hover { background:#34D399; color:#0A1128; }
+        .nav-dropdown-btn.active-section { background:#10B981; color:#fff; border-color:#10B981; }
+        .nav-dropdown-btn svg { width:16px; height:16px; transition:transform .3s; }
+        .nav-dropdown-btn.open svg { transform:rotate(180deg); }
+        .nav-dropdown-menu { display:none; position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); min-width:260px; background:#1A253F; border:2px solid #34D399; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:100; overflow:hidden; animation:fadeIn .2s ease; }
+        .nav-dropdown-menu.show { display:block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateX(-50%) translateY(-8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+        .nav-dropdown-menu a { display:flex; align-items:center; gap:10px; padding:12px 18px; color:#E5E7EB; text-decoration:none; font-size:.9rem; font-weight:600; transition:background .15s,color .15s; border-bottom:1px solid rgba(52,211,153,.1); }
+        .nav-dropdown-menu a:last-child { border-bottom:none; }
+        .nav-dropdown-menu a:hover { background:rgba(52,211,153,.12); color:#34D399; }
+        .nav-dropdown-menu a .nav-icon { font-size:1.1rem; width:24px; text-align:center; flex-shrink:0; }
+        .nav-dropdown-menu .nav-section-label { padding:8px 18px 4px; font-size:.7rem; font-weight:800; color:#6B7280; text-transform:uppercase; letter-spacing:1px; }
+        .nav-direct-btn { padding:10px 20px; font-weight:700; font-size:.95rem; border:2px solid transparent; cursor:pointer; background:transparent; color:#9CA3AF; border-radius:8px; transition:all .2s; }
+        .nav-direct-btn:hover { color:#FFF; border-color:#374151; }
+        .nav-direct-btn.active { color:#34D399; border-color:#34D399; background:rgba(52,211,153,.08); }
     </style>
 </head>
 <body>
+<div id="sync-indicator" class="sync-indicator sync-ok" style="opacity:0;">Sincronizado</div>
 
-<div class="app-container">
-    <aside class="sidebar">
-        <div class="brand-header">
-            <h1>PER CAPITAL</h1>
-            <p>SIMULADOR PAPELES COMERCIALES</p>
+<!-- ==================== LOGIN ==================== -->
+<div id="login-screen" class="login-container">
+    <div class="theme-card-bg rounded-2xl shadow-xl p-8 w-full max-w-md border theme-border-green">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold theme-text-white mb-2">Per Capital</h1>
+            <p class="theme-text-light-gray text-lg">Plataforma de Tesoreria</p>
+            <p class="theme-accent-green text-sm mt-1">Control de Emisiones de Papeles Comerciales</p>
         </div>
+        <form id="login-form" class="space-y-5">
+            <div>
+                <label for="login-email" class="block text-sm font-medium theme-text-light-gray mb-1">Correo</label>
+                <input type="email" id="login-email" required placeholder="javier@percapital.com" class="w-full p-3 border theme-border-green rounded-lg bg-gray-900 theme-text-white">
+            </div>
+            <div>
+                <label for="login-password" class="block text-sm font-medium theme-text-light-gray mb-1">Contrasena</label>
+                <input type="password" id="login-password" required placeholder="••••••••" class="w-full p-3 border theme-border-green rounded-lg bg-gray-900 theme-text-white">
+            </div>
+            <div id="login-error" class="hidden bg-red-700 text-white text-sm p-3 rounded-lg"></div>
+            <button type="submit" id="login-btn" class="w-full theme-strong-green-bg text-white px-5 py-3 rounded-lg hover:bg-green-600 font-semibold shadow-md text-lg">Iniciar Sesion</button>
+        </form>
+    </div>
+</div>
 
-        <div class="precision-info">
-            <strong>🔢 Cálculos de Alta Precisión:</strong> Este simulador usa la librería Decimal.js con 20 dígitos de precisión para evitar errores de redondeo en cálculos financieros.
-        </div>
-
-        <div class="logo-upload-section">
-            <strong>⚙️ Logo del Cliente para PDF:</strong>
-            <input type="file" id="logoUpload" accept="image/*" onchange="cargarLogoEmpresa(event)" />
-        </div>
-
-        <div class="section-title">DATOS DEL CLIENTE</div>
-        <div class="form-group">
-            <label>Nombre del Emisor</label>
-            <input type="text" id="nombre" value="Dernier Cosmetics, C.A." />
-        </div>
-        <div class="form-group">
-            <label>Tipo de Emisor</label>
-            <select id="tipoEmisor">
-                <option value="PYME" selected>PYME</option>
-                <option value="NO">Corporativo (No PYME)</option>
-            </select>
-            <div class="help-text">📌 PYME: exento de Registro Nacional SUNAVAL (2%). Corporativo: paga 2% del monto.</div>
-        </div>
-
-        <div class="section-title">CARACTERÍSTICAS DE LA EMISIÓN</div>
-        <div class="form-group">
-            <label>Tipo de Emisión</label>
-            <select id="tipoEmision" onchange="mostrarAlertaIndexada()">
-                <option value="USD" selected>En Dólares (USD)</option>
-                <option value="INDEXADA">Indexada</option>
-            </select>
-            <div class="help-text">📌 Indexada: se aplica Abono de Beneficios CVV del 0.09% sobre intereses y capital pagado.</div>
-        </div>
-        <div id="alertaIndexada" class="indexada-alert hidden">
-            <strong>⚠️ Emisión Indexada:</strong> Se aplicará Abono de Beneficios CVV del 0.09% sobre los pagos de intereses y capital durante toda la vigencia de la emisión.
-        </div>
-        <div class="form-group">
-            <label>Monto a Emitir (USD)</label>
-            <input type="number" id="monto" value="300000" />
-            <div class="help-text">📌 Valor nominal total de los papeles comerciales a emitir.</div>
-        </div>
-        <div class="form-group">
-            <label>Plazo (Días)</label>
-            <input type="number" id="plazo" value="360" />
-            <div class="help-text">📌 Duración de la emisión. Meses = Plazo ÷ 30 (redondeado hacia arriba).</div>
-        </div>
-        <div class="form-group">
-            <label>Tasa de Interés (% Anual)</label>
-            <input type="number" id="tasa" value="14.0" step="0.1" />
-            <div class="help-text">📌 Interés mensual = Monto × (Tasa ÷ 12). Total = Monto × Tasa × (Plazo ÷ 360).</div>
-        </div>
-        <div class="form-group">
-            <label>Frecuencia Pago Intereses</label>
-            <select id="frecuenciaInteres">
-                <option value="Mensual" selected>Mensual</option>
-                <option value="Bimestral">Bimestral</option>
-                <option value="Trimestral">Trimestral</option>
-                <option value="Semestral">Semestral</option>
-                <option value="Al Vencimiento">Al Vencimiento</option>
-            </select>
-            <div class="help-text">📌 Define cuándo se pagan intereses. Mensual = cada mes. Trimestral = cada 3 meses, etc.</div>
-        </div>
-        <div class="form-group">
-            <label>Amortización de Capital</label>
-            <select id="amortizacionCapital">
-                <option value="Al Vencimiento" selected>Al Vencimiento (Bullet)</option>
-                <option value="Semestral">Semestral</option>
-            </select>
-            <div class="help-text">📌 Bullet: capital se paga completo al final. Semestral: capital ÷ 2 cada 6 meses.</div>
-        </div>
-
-        <div class="section-title">CALIFICACIÓN DE RIESGO</div>
-        <div class="form-group">
-            <label>Costo Calificación (USD)</label>
-            <input type="number" id="calificacionRiesgo" value="900" step="100" />
-            <div class="help-text">📌 Honorarios de la calificadora de riesgo. Varía según emisor y monto.</div>
-        </div>
-
-        <div class="section-title">COMISIONES PER CAPITAL</div>
-        <div class="form-group">
-            <label>Estructuración (%)</label>
-            <input type="number" id="tasaEstructuracion" value="3.0" step="0.1" />
-            <div class="help-text">📌 Comisión = Monto × Tasa%. Incluye diseño legal y financiero de la emisión.</div>
-        </div>
-        <div class="form-group">
-            <label>Colocación (%)</label>
-            <input type="number" id="tasaColocacion" value="4.0" step="0.1" />
-            <div class="help-text">📌 Comisión = Monto × Tasa%. Por la venta de los títulos a inversionistas.</div>
-        </div>
-        <div class="form-group">
-            <label>Representación (%)</label>
-            <input type="number" id="tasaRepresentacion" value="0.25" step="0.01" />
-            <div class="help-text">📌 Comisión = Monto × Tasa%. Representante común de los tenedores.</div>
-        </div>
-
-        <button class="btn-main" onclick="generarPresupuesto()">CALCULAR PRESUPUESTO</button>
-    </aside>
-
-    <main class="main-content">
-        <div id="emptyState" class="empty-state">
-            <p>Complete los datos y presione "Calcular Presupuesto"</p>
-        </div>
-
-        <div id="resultsArea" class="hidden">
-            <div class="summary-header">
-                <div class="summary-title-area">
-                    <h2>Presupuesto de Emisión</h2>
-                    <p id="resEmpresa">EMPRESA</p>
-                </div>
-                <div class="cost-hero">
-                    <div class="cost-label">Costo Total de Financiamiento</div>
-                    <div class="cost-value" id="valCostoTotal">$0.00</div>
-                    <div class="cost-sub" id="valCostoPct">0.00% sobre capital</div>
+<!-- ==================== APP ==================== -->
+<div id="app-root" class="hidden">
+    <header class="theme-card-bg p-6 text-white text-center relative">
+        <h1 class="text-3xl font-extrabold mb-1">Papeles Comerciales Per Capital</h1>
+        <p id="user-display" class="text-base font-medium theme-text-light-gray">Cargando...</p>
+        <button id="logout-btn" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Cerrar Sesion</button>
+        <div class="nav-container">
+            <!-- Dashboard dropdown -->
+            <div class="nav-dropdown">
+                <button id="nav-dashboard-btn" class="nav-dropdown-btn active-section" data-tab="dashboard">
+                    Dashboard
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="nav-dashboard-menu" class="nav-dropdown-menu">
+                    <div class="nav-section-label">Secciones del Dashboard</div>
+                    <a href="#" data-nav="empresas"><span class="nav-icon">&#127970;</span> Administrar Empresas</a>
+                    <a href="#" data-nav="folder-legal"><span class="nav-icon">&#9878;</span> 1. Legal</a>
+                    <a href="#" data-nav="folder-financiero"><span class="nav-icon">&#128176;</span> 2. Financiero</a>
+                    <a href="#" data-nav="folder-administrativo"><span class="nav-icon">&#128196;</span> 3. Administrativo</a>
+                    <a href="#" data-nav="folder-actividad"><span class="nav-icon">&#128640;</span> 4. Actividad</a>
+                    <a href="#" data-nav="folder-emisor"><span class="nav-icon">&#128200;</span> 5. Emisor</a>
+                    <a href="#" data-nav="progress"><span class="nav-icon">&#9989;</span> Resumen de Progreso</a>
                 </div>
             </div>
-
-            <div id="tablaDetalle"></div>
-
-            <div class="flujo-section">
-                <h3>📊 Flujo de Caja del Emisor</h3>
-                <div class="flujo-wrapper" id="tablaFlujo"></div>
-            </div>
-
-            <div class="condiciones-box">
-                <h4>📋 Condiciones de Pago</h4>
-                <ul>
-                    <li>Pago de 50% de la comisión de estructuración para inicio del proceso</li>
-                    <li>Pago del 50% restante de honorarios de estructuración contra autorización SUNAVAL</li>
-                    <li>Pago del 100% de la comisión de colocación y representación según monto efectivamente colocado</li>
-                </ul>
-                <p class="nota">
-                    <strong>Nota:</strong> Los montos indicados son estimados y pueden variar según las condiciones finales. 
-                    Para mayor información, contactar a <strong>Per Capital</strong>.
-                </p>
-            </div>
-
-            <button class="btn-pdf" onclick="exportarPDF()">📄 GENERAR PDF PARA CLIENTE</button>
+            <!-- Simulador direct button -->
+            <button class="nav-direct-btn" data-tab="simulador">Simulador</button>
         </div>
-    </main>
+    </header>
+
+    <!-- ==================== TAB: DASHBOARD ==================== -->
+    <div id="tab-dashboard" class="tab-content active p-4 sm:p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+        <div class="theme-card-bg border theme-border-green rounded-xl p-6 shadow-md">
+            <h2 class="text-2xl font-bold theme-accent-green mb-4">Administrar Empresas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input type="text" id="new-company-name" placeholder="Nombre de la nueva empresa" class="p-3 border theme-border-green rounded-lg bg-gray-900 theme-text-white">
+                <button id="add-company-btn" class="theme-strong-green-bg text-white px-5 py-3 rounded-lg hover:bg-green-600 font-semibold shadow-md">Anadir Empresa</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <select id="company-select" class="p-3 border theme-border-green rounded-lg bg-gray-900 theme-text-white"><option value="">-- Seleccionar Empresa --</option></select>
+                <button id="delete-company-btn" class="bg-red-500 text-white px-5 py-3 rounded-lg hover:bg-red-600 font-semibold shadow-md">Eliminar Empresa</button>
+            </div>
+            <div id="message-box" class="mt-4 p-3 hidden rounded-lg text-sm"></div>
+        </div>
+
+        <div id="recaudos-section" class="hidden space-y-6">
+            <!-- 1. Legal -->
+            <div id="folder-legal" class="folder border theme-border-green rounded-lg theme-card-bg">
+                <div class="folder-header flex items-center justify-between p-4 theme-folder-header-bg rounded-t-lg"><h2 class="text-xl font-semibold text-white">1. Legal</h2><svg class="w-6 h-6 theme-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
+                <div class="folder-content hidden p-4 border-t theme-border-green space-y-4">
+                    <div class="border theme-border-green rounded-lg p-3 theme-dark-blue-bg">
+                        <h3 class="text-lg font-medium theme-accent-green mb-3">Acta Constitutiva</h3>
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            <input type="date" id="acta-constitutiva-date" class="p-2 border theme-border-green rounded-md text-sm w-36 bg-gray-900 text-white">
+                            <input type="file" id="file-acta-constitutiva" class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                            <label for="file-acta-constitutiva" class="file-input-label">Anexar Acta</label>
+                            <span id="acta-constitutiva-file-name" class="file-input-display"></span>
+                            <button type="button" id="add-acta-constitutiva-btn" class="theme-strong-green-bg text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir</button>
+                        </div>
+                        <ul id="list-acta-constitutiva" class="space-y-2 text-sm border-t pt-2 mt-2 theme-border-green theme-text-light-gray"></ul>
+                    </div>
+                    <div class="border theme-border-green rounded-lg p-3 theme-dark-blue-bg">
+                        <h3 class="text-lg font-medium theme-accent-green mb-3">Aumento de Capital</h3>
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            <input type="date" id="aumento-capital-date" class="p-2 border theme-border-green rounded-md text-sm w-36 bg-gray-900 text-white">
+                            <input type="file" id="file-aumento-capital" class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                            <label for="file-aumento-capital" class="file-input-label">Anexar Aumento</label>
+                            <span id="aumento-capital-file-name" class="file-input-display"></span>
+                            <button type="button" id="add-aumento-capital-btn" class="theme-strong-green-bg text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir</button>
+                        </div>
+                        <ul id="list-aumento-capital" class="space-y-2 text-sm border-t pt-2 mt-2 theme-border-green theme-text-light-gray"></ul>
+                    </div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="legal-ubicaciones" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Ubicaciones</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="legal-permisos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Permisos</label></div>
+                    <div class="flex items-center">
+                        <input type="checkbox" data-recaudo="legal-empresa-matrix" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Empresa Matrix</label>
+                        <button type="button" id="btn-empresa-matrix" class="btn-toggle ml-4 px-3 py-1 text-sm font-medium rounded-md">Aplica / No Aplica</button>
+                        <span id="matrix-acta-display-status" class="ml-2 text-sm font-medium hidden"></span>
+                    </div>
+                </div>
+            </div>
+            <!-- 2. Financiero -->
+            <div id="folder-financiero" class="folder border theme-border-green rounded-lg theme-card-bg">
+                <div class="folder-header flex items-center justify-between p-4 theme-folder-header-bg rounded-t-lg"><h2 class="text-xl font-semibold text-white">2. Financiero</h2><svg class="w-6 h-6 theme-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
+                <div class="folder-content hidden p-4 border-t theme-border-green space-y-3">
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="financiero-islr" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Declaraciones de ISLR</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="financiero-estado-resultado" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Estado de Resultado</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="financiero-balance-general" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Balance General</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="financiero-auditorias" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Auditorias</label></div>
+                </div>
+            </div>
+            <!-- 3. Administrativo -->
+            <div id="folder-administrativo" class="folder border theme-border-green rounded-lg theme-card-bg">
+                <div class="folder-header flex items-center justify-between p-4 theme-folder-header-bg rounded-t-lg"><h2 class="text-xl font-semibold text-white">3. Administrativo</h2><svg class="w-6 h-6 theme-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
+                <div class="folder-content hidden p-4 border-t theme-border-green space-y-4">
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="admin-ct-accionistas" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">C.T Accionistas</label></div>
+                    <div class="flex items-center gap-2"><label class="ml-3 theme-text-light-gray whitespace-nowrap">Numero de Accionistas:</label><input type="number" data-recaudo="admin-num-accionistas" placeholder="Cantidad" class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-24 bg-gray-900 text-white"></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="admin-rif-accionistas" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">RIF Accionistas</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="admin-cv-accionistas" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">CV Accionistas y Junta Directiva</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="admin-rif-bancarios" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">RIF Bancarios</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="admin-rif-compania" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">RIF de la Compania</label></div>
+                    <div class="border theme-border-green rounded-lg p-3 theme-dark-blue-bg">
+                        <h3 class="text-lg font-medium theme-accent-green mb-3">Licencias</h3>
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            <input type="text" id="admin-licencia-name" placeholder="Nombre de la licencia" class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 text-white">
+                            <button type="button" id="add-licencia-btn" class="theme-strong-green-bg text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir Licencia</button>
+                        </div>
+                        <ul id="list-licencias" class="space-y-2 text-sm border-t pt-2 mt-2 theme-border-green theme-text-light-gray"></ul>
+                    </div>
+                    <div class="border theme-border-green rounded-lg p-3 theme-dark-blue-bg">
+                        <h3 class="text-lg font-medium theme-accent-green mb-3">RRHH</h3>
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            <input type="text" id="admin-rrhh-item-name" placeholder="Item de RRHH" class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 text-white">
+                            <button type="button" id="add-rrhh-item-btn" class="theme-strong-green-bg text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir Item RRHH</button>
+                        </div>
+                        <ul id="list-rrhh-items" class="space-y-2 text-sm border-t pt-2 mt-2 theme-border-green theme-text-light-gray"></ul>
+                    </div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="admin-gobierno-corporativo" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Gobierno Corporativo</label></div>
+                </div>
+            </div>
+            <!-- 4. Actividad -->
+            <div id="folder-actividad" class="folder border theme-border-green rounded-lg theme-card-bg">
+                <div class="folder-header flex items-center justify-between p-4 theme-folder-header-bg rounded-t-lg"><h2 class="text-xl font-semibold text-white">4. Actividad</h2><svg class="w-6 h-6 theme-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
+                <div class="folder-content hidden p-4 border-t theme-border-green space-y-3">
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="actividad-estrategias-mercado" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Estrategias de Mercado y Mercadeo</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="actividad-garantia" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Garantia</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="actividad-libro-cv" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Libro C/V</label></div>
+                    <div class="flex items-center flex-wrap gap-2">
+                        <input type="checkbox" data-recaudo="actividad-maquinaria-equipos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Maquinaria y Equipos:</label>
+                        <input type="number" data-recaudo="actividad-maquinaria-valor-unitario" placeholder="Valor unitario" class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-32 bg-gray-900 text-white">
+                        <input type="number" data-recaudo="actividad-maquinaria-valor-mercado" placeholder="Valor de mercado $" class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-36 bg-gray-900 text-white">
+                    </div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="actividad-poliza" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Poliza</label></div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" data-recaudo="actividad-ventas" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Ventas:</label>
+                        <input type="number" data-recaudo="actividad-ventas-monto" placeholder="Monto total" class="recaudo-number p-1 border theme-border-green rounded-md text-sm w-32 bg-gray-900 text-white">
+                    </div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="actividad-direcciones-sedes" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Direcciones de Sedes</label></div>
+                    <div class="border theme-border-green rounded-lg p-3 theme-dark-blue-bg">
+                        <h3 class="text-lg font-medium theme-accent-green mb-3">Marcas y Redes Sociales</h3>
+                        <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 mb-3">
+                            <input type="text" id="actividad-marca-name" placeholder="Nombre de la marca" class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 text-white">
+                            <input type="file" id="file-marca-document" class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                            <label for="file-marca-document" class="file-input-label">Anexar Documento</label>
+                            <span id="marca-document-file-name" class="file-input-display"></span>
+                            <input type="text" id="actividad-rrss-link" placeholder="Enlace de RRSS" class="p-2 border theme-border-green rounded-md text-sm flex-grow bg-gray-900 text-white">
+                            <button type="button" id="add-marca-rrss-btn" class="theme-strong-green-bg text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Anadir Marca</button>
+                        </div>
+                        <ul id="list-marcas-rrss" class="space-y-2 text-sm border-t pt-2 mt-2 theme-border-green theme-text-light-gray"></ul>
+                    </div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="actividad-matrix-riesgo" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Matriz de Riesgo</label></div>
+                </div>
+            </div>
+            <!-- 5. Emisor -->
+            <div id="folder-emisor" class="folder border theme-border-green rounded-lg theme-card-bg">
+                <div class="folder-header flex items-center justify-between p-4 theme-folder-header-bg rounded-t-lg"><h2 class="text-xl font-semibold text-white">5. Emisor</h2><svg class="w-6 h-6 theme-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
+                <div class="folder-content hidden p-4 border-t theme-border-green space-y-3">
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-oportunidad-inversion" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Oportunidad de Inversion</label></div>
+                    <div class="pl-6 pt-2 border-l-4 theme-border-green rounded-lg theme-dark-blue-bg p-3">
+                        <h3 class="font-medium theme-accent-green mb-2">Recaudos de la Calificadora:</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-descripcion-actividad" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Descripcion de su actividad por lineas de negocio</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-capacidad-instalada" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Capacidad Instalada Vs. Capacidad Utilizada</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-linea-productos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Linea de productos</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-ventas-reales-estimadas" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Ventas reales y estimadas</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-evolucion-precios" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Evolucion de los precios</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-estructura-costos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Hacer estructura de costos</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-estrategia-marketing" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Estrategia de mercado y publicidad</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-desarrollo-nuevos-productos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Desarrollo de nuevos productos</label></div>
+                            <div class="flex items-center"><input type="checkbox" data-recaudo="recaudos-poliza-seguro" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Poliza y seguro y resguardo</label></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-prospecto" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Prospecto</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-telefono-sedes" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Telefono de las sedes</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-marcas-rs-productos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Marcas y RS cada producto y fecha de lanzamiento</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-propiedades" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Propiedades</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-clientes-proveedores" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Clientes y Proveedores y % y Ventas %</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-proveedores-costo" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Proveedores y Costo % anos</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-hoja-terminos" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Hoja de Terminos</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-aviso-prensa" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Aviso de Prensa</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-macrotitulo" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Macrotitulo</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-certificado-acta-constitutiva" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Certificado de Acta Constitutiva</label></div>
+                    <div class="flex items-center"><input type="checkbox" data-recaudo="emisor-acta-acciones" class="recaudo-checkbox h-5 w-5 rounded"><label class="ml-3 theme-text-light-gray">Acta de Acciones</label></div>
+                </div>
+            </div>
+        </div>
+        <!-- Progress -->
+        <div id="progress-summary" class="theme-card-bg border theme-border-green rounded-xl p-6 shadow-md hidden">
+            <h2 class="text-2xl font-bold theme-accent-green mb-4">Resumen de Progreso</h2>
+            <div class="progress-bar-container mb-4"><div id="completion-progress-bar" class="progress-bar">0%</div></div>
+            <h3 class="text-xl font-semibold theme-text-light-gray mb-3">Elementos Faltantes:</h3>
+            <ul id="missing-items-list" class="space-y-2 theme-text-light-gray list-disc pl-5"></ul>
+            <p id="all-completed-message" class="theme-strong-green-bg text-white font-bold text-lg hidden mt-4 p-2 rounded-md text-center">Todos los elementos estan completos.</p>
+        </div>
+    </div>
+
+    <!-- ==================== TAB: SIMULADOR ==================== -->
+    <div id="tab-simulador" class="tab-content p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+        <div class="sim-wrap">
+            <aside class="sim-sidebar">
+                <div class="mb-4"><h1 style="color:#0a0f2c;font-weight:900;font-size:1.4rem;border-left:5px solid #2563eb;padding-left:12px;">PER CAPITAL</h1><p style="font-size:.75rem;color:#1e40af;margin-top:3px;padding-left:17px;font-weight:600;">SIMULADOR PAPELES COMERCIALES</p></div>
+                <div class="precision-info"><strong>Calculos de Alta Precision:</strong> Usa Decimal.js con 20 digitos de precision.</div>
+                <div class="logo-upload-section"><strong>Logo del Cliente para PDF:</strong><input type="file" id="logoUpload" accept="image/*"></div>
+                <div class="section-title">DATOS DEL CLIENTE</div>
+                <div class="form-group"><label>Nombre del Emisor</label><input type="text" id="sim-nombre" value="Empresa Demo, C.A."></div>
+                <div class="form-group"><label>Tipo de Emisor</label><select id="sim-tipoEmisor"><option value="PYME" selected>PYME</option><option value="NO">Corporativo (No PYME)</option></select><div class="help-text">PYME: exento de Registro Nacional SUNAVAL (2%).</div></div>
+                <div class="section-title">CARACTERISTICAS DE LA EMISION</div>
+                <div class="form-group"><label>Tipo de Emision</label><select id="sim-tipoEmision"><option value="USD" selected>En Dolares (USD)</option><option value="INDEXADA">Indexada</option></select><div class="help-text">Indexada: se aplica Abono de Beneficios CVV del 0.09%.</div></div>
+                <div id="sim-alertaIndexada" class="indexada-alert hidden"><strong>Emision Indexada:</strong> Se aplicara Abono de Beneficios CVV del 0.09%.</div>
+                <div class="form-group"><label>Monto a Emitir (USD)</label><input type="number" id="sim-monto" value="300000"><div class="help-text">Valor nominal total de los papeles comerciales.</div></div>
+                <div class="form-group"><label>Plazo (Dias)</label><input type="number" id="sim-plazo" value="360"><div class="help-text">Meses = Plazo / 30 (redondeado).</div></div>
+                <div class="form-group"><label>Tasa de Interes (% Anual)</label><input type="number" id="sim-tasa" value="14.0" step="0.1"><div class="help-text">Interes mensual = Monto x (Tasa / 12).</div></div>
+                <div class="form-group"><label>Frecuencia Pago Intereses</label><select id="sim-frecuenciaInteres"><option value="Mensual" selected>Mensual</option><option value="Bimestral">Bimestral</option><option value="Trimestral">Trimestral</option><option value="Semestral">Semestral</option><option value="Al Vencimiento">Al Vencimiento</option></select></div>
+                <div class="form-group"><label>Amortizacion de Capital</label><select id="sim-amortizacionCapital"><option value="Al Vencimiento" selected>Al Vencimiento (Bullet)</option><option value="Semestral">Semestral</option></select></div>
+                <div class="section-title">CALIFICACION DE RIESGO</div>
+                <div class="form-group"><label>Costo Calificacion (USD)</label><input type="number" id="sim-calificacionRiesgo" value="900" step="100"></div>
+                <div class="section-title">COMISIONES PER CAPITAL</div>
+                <div class="form-group"><label>Estructuracion (%)</label><input type="number" id="sim-tasaEstructuracion" value="3.0" step="0.1"></div>
+                <div class="form-group"><label>Colocacion (%)</label><input type="number" id="sim-tasaColocacion" value="4.0" step="0.1"></div>
+                <div class="form-group"><label>Representacion (%)</label><input type="number" id="sim-tasaRepresentacion" value="0.25" step="0.01"></div>
+                <button class="btn-main" id="sim-calcular-btn">CALCULAR PRESUPUESTO</button>
+            </aside>
+            <main class="sim-main">
+                <div id="sim-emptyState" class="empty-state"><p>Complete los datos y presione "Calcular Presupuesto"</p></div>
+                <div id="sim-resultsArea" class="hidden">
+                    <div class="summary-header">
+                        <div><h2 style="font-size:1.6rem;color:#0a0f2c;font-weight:900;">Presupuesto de Emision</h2><p id="sim-resEmpresa" style="color:#1e40af;font-size:1rem;margin-top:4px;font-weight:600;">EMPRESA</p></div>
+                        <div style="text-align:right;"><div class="cost-label">Costo Total de Financiamiento</div><div class="cost-value" id="sim-valCostoTotal">$0.00</div><div class="cost-sub" id="sim-valCostoPct">0.00% sobre capital</div></div>
+                    </div>
+                    <div id="sim-tablaDetalle"></div>
+                    <div class="flujo-section"><h3>Flujo de Caja del Emisor</h3><div class="flujo-wrapper" id="sim-tablaFlujo"></div></div>
+                    <div class="condiciones-box"><h4>Condiciones de Pago</h4><ul><li>Pago de 50% de la comision de estructuracion para inicio del proceso</li><li>Pago del 50% restante contra autorizacion SUNAVAL</li><li>Pago del 100% de colocacion y representacion segun monto colocado</li></ul><p class="nota"><strong>Nota:</strong> Los montos son estimados. Contactar a Per Capital para mas informacion.</p></div>
+                    <button class="btn-pdf" id="sim-pdf-btn">GENERAR PDF PARA CLIENTE</button>
+                </div>
+            </main>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Configurar Decimal.js para alta precisión financiera
-    Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
+// ==================== SUPABASE ====================
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const LOGO_PERCAPITAL_URL = "https://res.cloudinary.com/dwx8gftmc/image/upload/v1769023852/Logo-Per-Capital-horizontal-negro_1_nmd85u.png";
-    let LOGO_EMPRESA_BASE64 = "";
-    let d = {};
-    let flujoData = [];
-    
-    // Formateo con precisión
-    const formatUSD = (v) => {
-        const num = typeof v === 'object' ? v.toNumber() : v;
-        return new Intl.NumberFormat('en-US', { 
-            style: 'currency', 
-            currency: 'USD', 
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2 
-        }).format(num);
-    };
-    
-    const formatPct = (v) => {
-        const num = typeof v === 'object' ? v.toNumber() : v;
-        return num.toFixed(2) + '%';
-    };
+// ==================== STATE ====================
+let currentUser = null, currentEmpresaId = null, empresasList = [], recaudosCache = {}, realtimeChannel = null, saveQueue = Promise.resolve(), syncTO = null;
+const STORAGE_BUCKET = 'documentos';
+const LIST_RECAUDOS = [
+    {key:'legal-actas',label:'Acta Constitutiva',listId:'list-acta-constitutiva',type:'file'},
+    {key:'legal-aumentos',label:'Aumento de Capital',listId:'list-aumento-capital',type:'file'},
+    {key:'admin-licencias',label:'Licencias',listId:'list-licencias',type:'text'},
+    {key:'admin-rrhh',label:'Items de RRHH',listId:'list-rrhh-items',type:'text'},
+    {key:'actividad-marcas',label:'Marcas y Redes Sociales',listId:'list-marcas-rrss',type:'marca'}
+];
 
-    function mostrarAlertaIndexada() {
-        const tipoEmision = document.getElementById('tipoEmision').value;
-        const alerta = document.getElementById('alertaIndexada');
-        if (tipoEmision === 'INDEXADA') {
-            alerta.classList.remove('hidden');
-        } else {
-            alerta.classList.add('hidden');
-        }
-    }
+// ==================== HELPERS ====================
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+function showMsg(t,tp){const b=$('#message-box');b.textContent=t;b.className='mt-4 p-3 rounded-lg text-sm border '+(tp==='success'?'bg-green-700 text-white border-green-800':tp==='error'?'bg-red-700 text-white border-red-800':'bg-blue-700 text-white border-blue-800');b.classList.remove('hidden');setTimeout(()=>b.classList.add('hidden'),4000);}
+function showSync(s){const e=$('#sync-indicator');clearTimeout(syncTO);e.className='sync-indicator '+(s==='saving'?'sync-saving':s==='error'?'sync-error':'sync-ok');e.textContent=s==='saving'?'Guardando...':s==='error'?'Error':'Sincronizado';e.style.opacity='1';if(s==='ok')syncTO=setTimeout(()=>{e.style.opacity='0';},2000);}
 
-    function cargarLogoEmpresa(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => LOGO_EMPRESA_BASE64 = e.target.result;
-            reader.readAsDataURL(file);
-        }
-    }
+// ==================== TABS & NAV ====================
+function switchTab(tab){
+    $$('.tab-content').forEach(c=>{c.classList.toggle('active',c.id==='tab-'+tab);});
+    // Update nav buttons
+    const dbBtn=$('#nav-dashboard-btn'), simBtn=$('.nav-direct-btn[data-tab="simulador"]');
+    if(tab==='dashboard'){dbBtn.classList.add('active-section');simBtn.classList.remove('active');}
+    else{dbBtn.classList.remove('active-section');simBtn.classList.add('active');}
+    // Close dropdown
+    $('#nav-dashboard-menu').classList.remove('show');
+    dbBtn.classList.remove('open');
+}
+function toggleDropdown(e){e.stopPropagation();const m=$('#nav-dashboard-menu'),b=$('#nav-dashboard-btn');m.classList.toggle('show');b.classList.toggle('open');}
+function closeDropdown(){$('#nav-dashboard-menu').classList.remove('show');$('#nav-dashboard-btn').classList.remove('open');}
+function navTo(target){
+    closeDropdown();
+    switchTab('dashboard');
+    setTimeout(()=>{
+        if(target==='empresas'){window.scrollTo({top:$('#tab-dashboard').offsetTop,behavior:'smooth'});}
+        else if(target==='progress'){const el=$('#progress-summary');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+        else{const fold=$('#'+target);if(fold){fold.scrollIntoView({behavior:'smooth',block:'start'});const cnt=fold.querySelector('.folder-content'),hdr=fold.querySelector('.folder-header');if(cnt&&cnt.classList.contains('hidden')&&currentEmpresaId){cnt.classList.remove('hidden');hdr.classList.add('expanded');hdr.querySelector('svg')?.classList.add('rotate-180');}}}
+    },100);
+}
 
-    function convertirImagenABase64(url, callback) {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            callback(canvas.toDataURL('image/png'));
-        };
-        img.onerror = () => callback(null);
-        img.src = url;
-    }
+// ==================== AUTH ====================
+async function handleLogin(e){e.preventDefault();const email=$('#login-email').value.trim(),pw=$('#login-password').value,err=$('#login-error'),btn=$('#login-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Verificando...';err.classList.add('hidden');try{const{data,error}=await sb.auth.signInWithPassword({email,password:pw});if(error)throw error;currentUser=data.user;showApp();}catch(er){err.textContent='Error: '+(er.message||'Credenciales incorrectas');err.classList.remove('hidden');}finally{btn.disabled=false;btn.textContent='Iniciar Sesion';}}
+async function handleLogout(){unsubRT();await sb.auth.signOut();currentUser=null;currentEmpresaId=null;$('#login-screen').classList.remove('hidden');$('#app-root').classList.add('hidden');}
+async function checkSession(){const{data:{user}}=await sb.auth.getUser();if(user){currentUser=user;showApp();}}
+function showApp(){$('#login-screen').classList.add('hidden');$('#app-root').classList.remove('hidden');const m=currentUser.user_metadata||{};$('#user-display').textContent=(m.full_name||m.name||currentUser.email)+', Departamento de Tesoreria';loadEmpresas();}
 
-    function crearMarcaDeAgua(url, opacidad, callback) {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; 
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.globalAlpha = opacidad;
-            ctx.drawImage(img, 0, 0);
-            callback(canvas.toDataURL('image/png'));
-        };
-        img.onerror = () => callback(null);
-        img.src = url;
-    }
+// ==================== EMPRESAS ====================
+async function loadEmpresas(){try{const{data,error}=await sb.from('empresas').select('*').eq('usuario_id',currentUser.id).order('fecha_creacion',{ascending:false});if(error)throw error;empresasList=data||[];renderCompSel();}catch(e){showMsg('Error: '+e.message,'error');}}
+function renderCompSel(){const s=$('#company-select');s.innerHTML='<option value="">-- Seleccionar Empresa --</option>';empresasList.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.nombre;s.appendChild(o);});if(currentEmpresaId)s.value=currentEmpresaId;}
+async function addEmpresa(){const n=$('#new-company-name').value.trim();if(!n){showMsg('Ingresa nombre.','info');return;}if(empresasList.some(e=>e.nombre===n)){showMsg('Ya existe.','error');return;}showSync('saving');try{const{data,error}=await sb.from('empresas').insert([{nombre:n,usuario_id:currentUser.id}]).select().single();if(error)throw error;empresasList.unshift(data);currentEmpresaId=data.id;renderCompSel();$('#new-company-name').value='';await selEmpresa(data.id);showMsg('Empresa "'+n+'" creada.','success');showSync('ok');}catch(e){showMsg('Error: '+e.message,'error');showSync('error');}}
+async function delEmpresa(){if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const emp=empresasList.find(e=>e.id===currentEmpresaId);if(!confirm('Eliminar "'+emp?.nombre+'"?'))return;showSync('saving');try{await sb.from('recaudos').delete().eq('empresa_id',currentEmpresaId);await sb.from('empresas').delete().eq('id',currentEmpresaId);empresasList=empresasList.filter(e=>e.id!==currentEmpresaId);currentEmpresaId=null;unsubRT();renderCompSel();$('#recaudos-section').classList.add('hidden');$('#progress-summary').classList.add('hidden');resetUI();showMsg('Eliminada.','success');showSync('ok');}catch(e){showMsg('Error: '+e.message,'error');showSync('error');}}
+async function selEmpresa(id){if(!id){currentEmpresaId=null;$('#recaudos-section').classList.add('hidden');$('#progress-summary').classList.add('hidden');resetUI();return;}currentEmpresaId=id;$('#company-select').value=id;resetUI();await loadRecaudos();subRT();$('#recaudos-section').classList.remove('hidden');$('#progress-summary').classList.remove('hidden');}
 
-    // Cálculo de flujo con Decimal.js para precisión
-    function calcularFlujo(monto, meses, tasaAnual, frecuenciaInteres, amortizacionCapital, capitalNeto, esIndexada) {
-        const flujo = [];
-        const M = new Decimal(monto);
-        const T = new Decimal(tasaAnual);
-        
-        // CVV: 0.03% mensual + IVA 16%
-        const cvvBase = M.times(new Decimal('0.0003'));
-        const ivaCVV = new Decimal('0.16');
-        const cvvConIVA = cvvBase.times(ivaCVV.plus(1));
-        
-        // Abono de Beneficios CVV: 0.09% sobre intereses y capital
-        const tasaAbonoBeneficiosCVV = new Decimal('0.0009');
-        
-        // Tasa mensual
-        const tasaMensual = T.dividedBy(12);
-        
-        // Período de intereses
-        let periodoInteres = 1;
-        if (frecuenciaInteres === 'Bimestral') periodoInteres = 2;
-        else if (frecuenciaInteres === 'Trimestral') periodoInteres = 3;
-        else if (frecuenciaInteres === 'Semestral') periodoInteres = 6;
-        else if (frecuenciaInteres === 'Al Vencimiento') periodoInteres = meses;
-        
-        // Amortizaciones de capital
-        let amortizacionesCap = [];
-        if (amortizacionCapital === 'Al Vencimiento') {
-            amortizacionesCap = [{ mes: meses, monto: M }];
-        } else if (amortizacionCapital === 'Semestral') {
-            const numAmort = Math.floor(meses / 6);
-            const montoPorAmort = M.dividedBy(numAmort);
-            for (let i = 1; i <= numAmort; i++) {
-                amortizacionesCap.push({ mes: i * 6, monto: montoPorAmort });
-            }
-        }
-        
-        // Mes 0: Capital neto recibido
-        flujo.push({ 
-            mes: 0, 
-            capital: new Decimal(capitalNeto), 
-            cvv: new Decimal(0), 
-            intereses: new Decimal(0),
-            abonoBeneficiosCVV: new Decimal(0),
-            total: new Decimal(capitalNeto) 
-        });
-        
-        // Meses 1 a n
-        let capitalPendiente = M;
-        for (let m = 1; m <= meses; m++) {
-            let capitalMes = new Decimal(0);
-            let interesesMes = new Decimal(0);
-            let cvvMes = cvvConIVA.negated();
-            let abonoBeneficiosCVVMes = new Decimal(0);
-            
-            // Intereses según frecuencia
-            if (frecuenciaInteres === 'Mensual') {
-                interesesMes = capitalPendiente.times(tasaMensual).negated();
-            } else if (frecuenciaInteres === 'Al Vencimiento') {
-                if (m === meses) {
-                    interesesMes = M.times(T).negated();
-                }
-            } else {
-                if (m % periodoInteres === 0) {
-                    interesesMes = capitalPendiente.times(tasaMensual).times(periodoInteres).negated();
-                }
-            }
-            
-            // Amortización de capital
-            const amort = amortizacionesCap.find(a => a.mes === m);
-            if (amort) {
-                capitalMes = amort.monto.negated();
-                capitalPendiente = capitalPendiente.minus(amort.monto);
-            }
-            
-            // Abono de Beneficios CVV para emisión indexada (0.09% sobre intereses + capital pagados)
-            if (esIndexada) {
-                const baseIndexada = interesesMes.abs().plus(capitalMes.abs());
-                abonoBeneficiosCVVMes = baseIndexada.times(tasaAbonoBeneficiosCVV).negated();
-            }
-            
-            const total = capitalMes.plus(cvvMes).plus(interesesMes).plus(abonoBeneficiosCVVMes);
-            
-            flujo.push({ 
-                mes: m, 
-                capital: capitalMes, 
-                cvv: cvvMes, 
-                intereses: interesesMes,
-                abonoBeneficiosCVV: abonoBeneficiosCVVMes,
-                total: total 
-            });
-        }
-        
-        return flujo;
-    }
+// ==================== RECAUDOS ====================
+async function loadRecaudos(){try{const{data,error}=await sb.from('recaudos').select('*').eq('empresa_id',currentEmpresaId);if(error)throw error;recaudosCache={};(data||[]).forEach(r=>{recaudosCache[r.nombre_recaudo]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};});popUI();}catch(e){showMsg('Error: '+e.message,'error');}}
+function popUI(){$$('.recaudo-checkbox').forEach(cb=>{const k=cb.dataset.recaudo,c=recaudosCache[k];cb.checked=c?(c.metadata_json?.aplica===false?false:c.estado_booleano):false;});const mc=recaudosCache['legal-empresa-matrix'],mb=$('#btn-empresa-matrix');mb.classList.remove('aplica','no-aplica');mb.textContent='Aplica / No Aplica';if(mc?.metadata_json){if(mc.metadata_json.aplica===true){mb.classList.add('aplica');mb.textContent='Aplica';}else if(mc.metadata_json.aplica===false){mb.classList.add('no-aplica');mb.textContent='No Aplica';}}
+$$('.recaudo-number').forEach(i=>{const c=recaudosCache[i.dataset.recaudo];i.value=c?.metadata_json?.value!=null?c.metadata_json.value:'';});
+LIST_RECAUDOS.forEach(lr=>{const c=recaudosCache[lr.key];renderList(lr.listId,c?.metadata_json?.items||[],lr.key,lr.type);});checkMatrix();updProg();}
+function qSave(n,e,m){saveQueue=saveQueue.then(()=>saveRec(n,e,m)).catch(()=>{});}
+async function saveRec(n,e,m){if(!currentEmpresaId)return;showSync('saving');try{const ex=recaudosCache[n];let r;if(ex?.id){const{data,error}=await sb.from('recaudos').update({estado_booleano:e,metadata_json:m}).eq('id',ex.id).select().single();if(error)throw error;r=data;}else{const{data,error}=await sb.from('recaudos').insert([{empresa_id:currentEmpresaId,nombre_recaudo:n,estado_booleano:e,metadata_json:m}]).select().single();if(error)throw error;r=data;}recaudosCache[n]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};showSync('ok');}catch(e){console.error(e);showSync('error');}}
+async function delRecName(n){if(!currentEmpresaId)return;showSync('saving');try{await sb.from('recaudos').delete().eq('empresa_id',currentEmpresaId).eq('nombre_recaudo',n);delete recaudosCache[n];showSync('ok');}catch(e){showSync('error');}}
 
-    function generarPresupuesto() {
-        // Obtener valores y convertir a Decimal
-        const montoNum = parseFloat(document.getElementById('monto').value);
-        const plazoNum = parseInt(document.getElementById('plazo').value);
-        const tasaNum = parseFloat(document.getElementById('tasa').value);
-        const esPyme = document.getElementById('tipoEmisor').value === 'PYME';
-        const esIndexada = document.getElementById('tipoEmision').value === 'INDEXADA';
-        const frecuenciaInteres = document.getElementById('frecuenciaInteres').value;
-        const amortizacionCapital = document.getElementById('amortizacionCapital').value;
+// ==================== REALTIME ====================
+function subRT(){unsubRT();if(!currentEmpresaId)return;realtimeChannel=sb.channel('rec-'+currentEmpresaId).on('postgres_changes',{event:'*',schema:'public',table:'recaudos',filter:'empresa_id=eq.'+currentEmpresaId},(p)=>{if(p.eventType==='INSERT'||p.eventType==='UPDATE'){const r=p.new;recaudosCache[r.nombre_recaudo]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};}else if(p.eventType==='DELETE'&&p.old?.nombre_recaudo)delete recaudosCache[p.old.nombre_recaudo];popUI();}).subscribe();}
+function unsubRT(){if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}}
 
-        const tasaEstructuracionNum = parseFloat(document.getElementById('tasaEstructuracion').value);
-        const tasaColocacionNum = parseFloat(document.getElementById('tasaColocacion').value);
-        const tasaRepresentacionNum = parseFloat(document.getElementById('tasaRepresentacion').value);
-        const calificacionRiesgoNum = parseFloat(document.getElementById('calificacionRiesgo').value);
+// ==================== STORAGE ====================
+async function uploadFile(file){if(!currentUser||!currentEmpresaId)return null;const ext=file.name.split('.').pop(),path=currentUser.id+'/'+currentEmpresaId+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;showSync('saving');try{const{error}=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{cacheControl:'3600',upsert:true});if(error)throw error;showSync('ok');return path;}catch(e){showSync('error');showMsg('Error subiendo: '+e.message,'error');return null;}}
+async function delFile(p){if(!p)return;try{await sb.storage.from(STORAGE_BUCKET).remove([p]);}catch(e){}}
 
-        // Usar Decimal para todos los cálculos
-        const monto = new Decimal(montoNum);
-        const plazo = new Decimal(plazoNum);
-        const tasa = new Decimal(tasaNum).dividedBy(100);
-        const tasaEstructuracion = new Decimal(tasaEstructuracionNum).dividedBy(100);
-        const tasaColocacion = new Decimal(tasaColocacionNum).dividedBy(100);
-        const tasaRepresentacion = new Decimal(tasaRepresentacionNum).dividedBy(100);
-        const calificacionRiesgo = new Decimal(calificacionRiesgoNum);
+// ==================== LISTS ====================
+function renderList(id,items,dk,type){const ul=document.getElementById(id);ul.innerHTML='';if(!items?.length)return;items.forEach((it,i)=>{const li=document.createElement('li');li.className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 bg-gray-900 rounded-md border border-green-700';let c='';if(type==='file')c='<strong class="theme-text-light-gray">Fecha:</strong> '+(it.date||'N/A')+' | <strong class="theme-text-light-gray">Archivo:</strong> '+(it.fileName||'No anexado');else if(type==='text')c='<strong class="theme-text-light-gray">'+(it.name||'N/A')+'</strong>';else if(type==='marca')c='<div><strong>Marca:</strong> '+(it.brandName||'N/A')+'<br><strong>Archivo:</strong> '+(it.fileName||'No anexado')+'<br><strong>RRSS:</strong> <a href="'+(it.rrssLink||'#')+'" target="_blank" class="theme-accent-green">'+(it.rrssLink||'N/A')+'</a></div>';li.innerHTML='<span class="theme-text-light-gray">'+c+'</span><button type="button" class="remove-item-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600 mt-2 sm:mt-0" data-index="'+i+'" data-key="'+dk+'" data-list="'+id+'" data-type="'+type+'" '+(it.filePath?'data-filepath="'+it.filePath+'"':'')+'>Eliminar</button>';ul.appendChild(li);});}
+function getItems(dk){const c=recaudosCache[dk];return c?.metadata_json?.items?[...c.metadata_json.items]:[];}
+async function addItem(dk,lid,type,item){const items=getItems(dk);items.push(item);qSave(dk,true,{items});recaudosCache[dk]=recaudosCache[dk]||{};recaudosCache[dk].estado_booleano=true;recaudosCache[dk].metadata_json={items};renderList(lid,items,dk,type);updProg();checkMatrix();}
+async function removeItem(dk,lid,type,idx,fp){if(!confirm('Eliminar este item?'))return;const items=getItems(dk);if(fp)await delFile(fp);items.splice(idx,1);if(!items.length)await delRecName(dk);else qSave(dk,true,{items});recaudosCache[dk]=recaudosCache[dk]||{};recaudosCache[dk].estado_booleano=items.length>0;recaudosCache[dk].metadata_json={items};renderList(lid,items,dk,type);updProg();checkMatrix();showMsg('Eliminado.','success');}
 
-        // Meses (redondeado hacia arriba)
-        const meses = Math.ceil(plazoNum / 30);
-        
-        // Intereses totales: Monto × Tasa × (Plazo / 360)
-        const interesesTotales = monto.times(tasa).times(plazo.dividedBy(360));
-        
-        // Registro Nacional SUNAVAL (solo corporativo: 2%)
-        const tasaRegSUNAVAL = esPyme ? new Decimal(0) : new Decimal('0.02');
-        const registroNacional = monto.times(tasaRegSUNAVAL);
-        
-        // Contribución Anual SUNAVAL: 0.5%
-        const contribucionAnual = monto.times(new Decimal('0.005'));
-        
-        // Estructuración
-        const estructuracion = monto.times(tasaEstructuracion);
-        
-        // Colocación
-        const colocacion = monto.times(tasaColocacion);
-        
-        // Representación
-        const representacion = monto.times(tasaRepresentacion);
-        
-        // Publicación Aviso de Prensa (tarifa fija)
-        const publicacionAviso = new Decimal(25);
-        
-        // BVCC: 0.5%
-        const bvcc = monto.times(new Decimal('0.005'));
-        
-        // Inscripción ISIN según plazo
-        let inscripcionISIN;
-        if (plazoNum <= 90) inscripcionISIN = new Decimal(38);
-        else if (plazoNum <= 180) inscripcionISIN = new Decimal(80);
-        else if (plazoNum <= 270) inscripcionISIN = new Decimal(118);
-        else inscripcionISIN = new Decimal(160);
-        
-        // CVV: 0.03% mensual × meses
-        const cvvMensual = monto.times(new Decimal('0.0003'));
-        const cvvTotal = cvvMensual.times(meses);
-        
-        // IVA sobre CVV: 16%
-        const ivaCVV = cvvTotal.times(new Decimal('0.16'));
+// ==================== PROGRESS ====================
+function updProg(){if(!currentEmpresaId){$('#completion-progress-bar').style.width='0%';$('#completion-progress-bar').textContent='0%';$('#missing-items-list').innerHTML='';return;}let t=0,c=0;const ml=$('#missing-items-list');ml.innerHTML='';$('#all-completed-message').classList.add('hidden');
+$$('.recaudo-checkbox').forEach(cb=>{const k=cb.dataset.recaudo,cc=recaudosCache[k],lb=cb.parentElement.querySelector('label')?.textContent?.trim()||k;if(k==='legal-empresa-matrix'&&cc?.metadata_json?.aplica===false)return;t++;if(cc?.estado_booleano)c++;else{const li=document.createElement('li');li.textContent=lb;li.className='theme-text-light-gray';ml.appendChild(li);}});
+$$('.recaudo-number').forEach(inp=>{const k=inp.dataset.recaudo,cc=recaudosCache[k],hv=cc?.metadata_json?.value!=null&&cc.metadata_json.value!=='';t++;if(hv)c++;else{const li=document.createElement('li');li.textContent=inp.placeholder||k;li.className='theme-text-light-gray';ml.appendChild(li);}});
+LIST_RECAUDOS.forEach(lr=>{t++;const cc=recaudosCache[lr.key];if(cc?.metadata_json?.items?.length>0)c++;else{const li=document.createElement('li');li.textContent=lr.label;li.className='theme-text-light-gray';ml.appendChild(li);}});
+const p=t>0?Math.round(c/t*100):0;$('#completion-progress-bar').style.width=p+'%';$('#completion-progress-bar').textContent=p+'%';if(t>0&&c===t)$('#all-completed-message').classList.remove('hidden');}
 
-        // Abono de Beneficios CVV por emisión indexada: 0.09% sobre (intereses + capital)
-        let abonoBeneficiosCVVTotal = new Decimal(0);
-        if (esIndexada) {
-            const baseIndexada = interesesTotales.plus(monto);
-            abonoBeneficiosCVVTotal = baseIndexada.times(new Decimal('0.0009'));
-        }
+// ==================== MATRIX ====================
+function checkMatrix(){const mc=recaudosCache['legal-empresa-matrix'],ac=recaudosCache['legal-actas'],el=$('#matrix-acta-display-status');el.classList.add('hidden');el.classList.remove('status-positive','status-negative');if(!mc)return;if(mc.estado_booleano&&mc.metadata_json?.aplica===true){el.classList.remove('hidden');if(ac?.metadata_json?.items?.length>0){el.textContent='Acta Constitutiva presente';el.classList.add('status-positive');}else{el.textContent='Falta Acta Constitutiva';el.classList.add('status-negative');}}}
+function toggleMatrix(){if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const b=$('#btn-empresa-matrix'),c=recaudosCache['legal-empresa-matrix']||{estado_booleano:false,metadata_json:{}};let a;if(b.classList.contains('aplica')){b.classList.remove('aplica');b.classList.add('no-aplica');b.textContent='No Aplica';a=false;}else if(b.classList.contains('no-aplica')){b.classList.remove('no-aplica');b.textContent='Aplica / No Aplica';a=null;}else{b.classList.add('aplica');b.textContent='Aplica';a=true;}const m={...c.metadata_json,aplica:a};qSave('legal-empresa-matrix',c.estado_booleano,m);recaudosCache['legal-empresa-matrix']={...c,metadata_json:m};checkMatrix();updProg();}
+function resetUI(){$$('.recaudo-checkbox').forEach(c=>c.checked=false);$$('.recaudo-number').forEach(i=>i.value='');$$('.file-input-display').forEach(s=>s.textContent='');LIST_RECAUDOS.forEach(l=>{document.getElementById(l.listId).innerHTML='';});$('#btn-empresa-matrix').classList.remove('aplica','no-aplica');$('#btn-empresa-matrix').textContent='Aplica / No Aplica';$('#matrix-acta-display-status').classList.add('hidden');recaudosCache={};$$('.folder-content').forEach(f=>f.classList.add('hidden'));$$('.folder-header').forEach(h=>{h.classList.remove('expanded');h.querySelector('svg')?.classList.remove('rotate-180');});updProg();}
+function setupFileDsp(iid,sid){const i=document.getElementById(iid);if(!i)return;i.addEventListener('change',()=>{document.getElementById(sid).textContent=i.files.length>0?i.files[0].name:'';});}
 
-        // Costos iniciales (se descuentan del capital)
-        const costosIniciales = registroNacional
-            .plus(contribucionAnual)
-            .plus(calificacionRiesgo)
-            .plus(estructuracion)
-            .plus(colocacion)
-            .plus(representacion)
-            .plus(publicacionAviso)
-            .plus(bvcc)
-            .plus(inscripcionISIN);
-        
-        // Total comisiones (incluye CVV + IVA + Abono de Beneficios CVV)
-        const totalComisiones = costosIniciales.plus(cvvTotal).plus(ivaCVV).plus(abonoBeneficiosCVVTotal);
-        
-        // Costo total de financiamiento
-        const costoTotalEmision = totalComisiones.plus(interesesTotales);
-        
-        // % sobre capital
-        const costoFinanciamientoPct = costoTotalEmision.dividedBy(monto).times(100);
-        
-        // Capital neto que recibe el emisor
-        const capitalNeto = monto.minus(costosIniciales);
+// ==================== SIMULATOR ====================
+Decimal.set({precision:20,rounding:Decimal.ROUND_HALF_UP});
+const LOGO_URL="https://res.cloudinary.com/dwx8gftmc/image/upload/v1769023852/Logo-Per-Capital-horizontal-negro_1_nmd85u.png";
+let LOGO_EMP_B64="",simD={},simFlujo=[];
+const fUSD=v=>{const n=typeof v==='object'?v.toNumber():v;return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);};
+const fPct=v=>{const n=typeof v==='object'?v.toNumber():v;return n.toFixed(2)+'%';};
+document.getElementById('logoUpload').addEventListener('change',e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>LOGO_EMP_B64=ev.target.result;r.readAsDataURL(f);}});
+document.getElementById('sim-tipoEmision').addEventListener('change',()=>{document.getElementById('sim-alertaIndexada').classList.toggle('hidden',document.getElementById('sim-tipoEmision').value!=='INDEXADA');});
+function img2b64(url,cb){const i=new Image();i.crossOrigin='Anonymous';i.onload=function(){const c=document.createElement('canvas');c.width=i.width;c.height=i.height;c.getContext('2d').drawImage(i,0,0);cb(c.toDataURL('image/png'));};i.onerror=()=>cb(null);i.src=url;}
+function mkWM(url,op,cb){const i=new Image();i.crossOrigin='Anonymous';i.onload=function(){const c=document.createElement('canvas');c.width=i.width;c.height=i.height;const x=c.getContext('2d');x.globalAlpha=op;x.drawImage(i,0,0);cb(c.toDataURL('image/png'));};i.onerror=()=>cb(null);i.src=url;}
+function calcFlujo(monto,meses,tasaAnual,freqInt,amortCap,capNeto,esIdx){const fl=[];const M=new Decimal(monto),T=new Decimal(tasaAnual),cvvB=M.times('0.0003'),cvvCI=cvvB.times(new Decimal('1.16')),tAB=new Decimal('0.0009'),tM=T.dividedBy(12);let pI=1;if(freqInt==='Bimestral')pI=2;else if(freqInt==='Trimestral')pI=3;else if(freqInt==='Semestral')pI=6;else if(freqInt==='Al Vencimiento')pI=meses;let amC=[];if(amortCap==='Al Vencimiento')amC=[{mes:meses,monto:M}];else if(amortCap==='Semestral'){const n=Math.floor(meses/6),mp=M.dividedBy(n);for(let i=1;i<=n;i++)amC.push({mes:i*6,monto:mp});}
+fl.push({mes:0,capital:new Decimal(capNeto),cvv:new Decimal(0),intereses:new Decimal(0),abono:new Decimal(0),total:new Decimal(capNeto)});let cP=M;for(let m=1;m<=meses;m++){let cM=new Decimal(0),iM=new Decimal(0),cvM=cvvCI.negated(),aM=new Decimal(0);if(freqInt==='Mensual')iM=cP.times(tM).negated();else if(freqInt==='Al Vencimiento'){if(m===meses)iM=M.times(T).negated();}else{if(m%pI===0)iM=cP.times(tM).times(pI).negated();}const am=amC.find(a=>a.mes===m);if(am){cM=am.monto.negated();cP=cP.minus(am.monto);}if(esIdx){aM=iM.abs().plus(cM.abs()).times(tAB).negated();}fl.push({mes:m,capital:cM,cvv:cvM,intereses:iM,abono:aM,total:cM.plus(cvM).plus(iM).plus(aM)});}return fl;}
+function genPresup(){const monN=parseFloat($('#sim-monto').value),plzN=parseInt($('#sim-plazo').value),tasN=parseFloat($('#sim-tasa').value),esPyme=$('#sim-tipoEmisor').value==='PYME',esIdx=$('#sim-tipoEmision').value==='INDEXADA',fI=$('#sim-frecuenciaInteres').value,aC=$('#sim-amortizacionCapital').value,tEN=parseFloat($('#sim-tasaEstructuracion').value),tCN=parseFloat($('#sim-tasaColocacion').value),tRN=parseFloat($('#sim-tasaRepresentacion').value),cRN=parseFloat($('#sim-calificacionRiesgo').value);
+const M=new Decimal(monN),P=new Decimal(plzN),T=new Decimal(tasN).dividedBy(100),tE=new Decimal(tEN).dividedBy(100),tC=new Decimal(tCN).dividedBy(100),tR=new Decimal(tRN).dividedBy(100),cR=new Decimal(cRN);
+const meses=Math.ceil(plzN/30),intT=M.times(T).times(P.dividedBy(360)),tRS=esPyme?new Decimal(0):new Decimal('0.02'),rN=M.times(tRS),cA=M.times('0.005'),est=M.times(tE),col=M.times(tC),rep=M.times(tR),pA=new Decimal(25),bv=M.times('0.005');
+let iISIN;if(plzN<=90)iISIN=new Decimal(38);else if(plzN<=180)iISIN=new Decimal(80);else if(plzN<=270)iISIN=new Decimal(118);else iISIN=new Decimal(160);
+const cvvM=M.times('0.0003'),cvvT=cvvM.times(meses),ivaCVV=cvvT.times('0.16');let abT=new Decimal(0);if(esIdx)abT=intT.plus(M).times('0.0009');
+const cI=rN.plus(cA).plus(cR).plus(est).plus(col).plus(rep).plus(pA).plus(bv).plus(iISIN),tCom=cI.plus(cvvT).plus(ivaCVV).plus(abT),cTE=tCom.plus(intT),cFP=cTE.dividedBy(M).times(100),cNet=M.minus(cI);
+simD={empresa:$('#sim-nombre').value.toUpperCase(),monto:M.toNumber(),plazo:plzN,meses,tasa:tasN,frecuenciaInteres:fI,amortizacionCapital:aC,tipoEmisorTexto:esPyme?'PYME':'No PYME',tipoEmisionTexto:esIdx?'Indexada':'En Dolares (USD)',esIndexada:esIdx,interesesTotales:intT.toNumber(),registroNacional:rN.toNumber(),tasaRegSUNAVAL:tRS.times(100).toNumber(),contribucionAnual:cA.toNumber(),calificacionRiesgo:cR.toNumber(),estructuracion:est.toNumber(),tasaEstructuracion:tEN,colocacion:col.toNumber(),tasaColocacion:tCN,representacion:rep.toNumber(),tasaRepresentacion:tRN,publicacionAviso:pA.toNumber(),bvcc:bv.toNumber(),inscripcionISIN:iISIN.toNumber(),cvvTotal:cvvT.toNumber(),ivaCVV:ivaCVV.toNumber(),abonoBeneficiosCVVTotal:abT.toNumber(),totalComisiones:tCom.toNumber(),costoTotalEmision:cTE.toNumber(),costoFinanciamientoPct:cFP.toNumber(),capitalNeto:cNet.toNumber(),costosIniciales:cI.toNumber()};
+simFlujo=calcFlujo(monN,meses,T.toNumber(),fI,aC,cNet.toNumber(),esIdx);
+$('#sim-emptyState').classList.add('hidden');$('#sim-resultsArea').classList.remove('hidden');$('#sim-resEmpresa').innerText=simD.empresa;$('#sim-valCostoTotal').innerText=fUSD(simD.costoTotalEmision);$('#sim-valCostoPct').innerText=simD.costoFinanciamientoPct.toFixed(2)+'% sobre capital';
+let regR=simD.tasaRegSUNAVAL>0?'<tr><td>Registro Nacional SUNAVAL<span class="formula-hint">= '+fUSD(simD.monto)+' x 2%</span></td><td>'+fPct(simD.tasaRegSUNAVAL)+'</td><td style="text-align:right">'+fUSD(simD.registroNacional)+'</td></tr>':'';
+let abR=esIdx?'<tr><td>Abono de Beneficios CVV<span class="formula-hint">= ('+fUSD(simD.interesesTotales)+' + '+fUSD(simD.monto)+') x 0.09%</span></td><td>0.09%</td><td style="text-align:right">'+fUSD(simD.abonoBeneficiosCVVTotal)+'</td></tr>':'';
+$('#sim-tablaDetalle').innerHTML='<table class="detail-table"><thead><tr><th>Concepto</th><th>Tasa/Base</th><th style="text-align:right">Monto USD</th></tr></thead><tbody><tr class="category-row"><td colspan="3">DESGLOSE DE COSTOS</td></tr>'+regR+'<tr><td>Contribucion Especial Anual SUNAVAL<span class="formula-hint">= '+fUSD(simD.monto)+' x 0.50%</span></td><td>0.50%</td><td style="text-align:right">'+fUSD(simD.contribucionAnual)+'</td></tr><tr><td>Calificacion de Riesgo</td><td>'+simD.tipoEmisorTexto+'</td><td style="text-align:right">'+fUSD(simD.calificacionRiesgo)+'</td></tr><tr><td>Estructuracion Legal y Financiera<span class="formula-hint">= '+fUSD(simD.monto)+' x '+fPct(simD.tasaEstructuracion)+'</span></td><td>'+fPct(simD.tasaEstructuracion)+'</td><td style="text-align:right">'+fUSD(simD.estructuracion)+'</td></tr><tr><td>Colocacion en Mercado<span class="formula-hint">= '+fUSD(simD.monto)+' x '+fPct(simD.tasaColocacion)+'</span></td><td>'+fPct(simD.tasaColocacion)+'</td><td style="text-align:right">'+fUSD(simD.colocacion)+'</td></tr><tr><td>Representacion de Tenedores<span class="formula-hint">= '+fUSD(simD.monto)+' x '+fPct(simD.tasaRepresentacion)+'</span></td><td>'+fPct(simD.tasaRepresentacion)+'</td><td style="text-align:right">'+fUSD(simD.representacion)+'</td></tr><tr><td>Publicacion de Aviso de Prensa</td><td>Tarifa Plana</td><td style="text-align:right">'+fUSD(simD.publicacionAviso)+'</td></tr><tr><td>Bolsa de Valores (BVCC)<span class="formula-hint">= '+fUSD(simD.monto)+' x 0.50%</span></td><td>0.50%</td><td style="text-align:right">'+fUSD(simD.bvcc)+'</td></tr><tr><td>Inscripcion Codigo ISIN (CVV)</td><td>S/ Plazo</td><td style="text-align:right">'+fUSD(simD.inscripcionISIN)+'</td></tr><tr><td>Custodia Caja de Valores (CVV)<span class="formula-hint">= '+fUSD(simD.monto)+' x 0.03% x '+simD.meses+' meses</span></td><td>0.03% mensual</td><td style="text-align:right">'+fUSD(simD.cvvTotal)+'</td></tr><tr><td>IVA sobre CVV<span class="formula-hint">= '+fUSD(simD.cvvTotal)+' x 16%</span></td><td>16%</td><td style="text-align:right">'+fUSD(simD.ivaCVV)+'</td></tr>'+abR+'<tr class="subtotal-row"><td colspan="2">TOTAL COMISIONES Y GASTOS</td><td style="text-align:right">'+fUSD(simD.totalComisiones)+'</td></tr><tr><td>Intereses Totales Proyectados<span class="formula-hint">= '+fUSD(simD.monto)+' x '+simD.tasa.toFixed(2)+'% x ('+simD.plazo+' / 360)</span></td><td>'+simD.tasa.toFixed(2)+'% anual</td><td style="text-align:right">'+fUSD(simD.interesesTotales)+'</td></tr><tr class="total-row"><td colspan="2">COSTO TOTAL DE FINANCIAMIENTO</td><td style="text-align:right">'+fUSD(simD.costoTotalEmision)+'</td></tr><tr style="background:#bbf7d0;"><td colspan="2" style="font-weight:800;color:#166534;font-size:1rem;">% COSTO TOTAL DE FINANCIAMIENTO</td><td style="text-align:right;color:#166534;font-size:1.15rem;font-weight:900;">'+simD.costoFinanciamientoPct.toFixed(2)+'%</td></tr></tbody></table>';
+renderFlujo();}
+function renderFlujo(){let h='<table class="flujo-table"><thead><tr><th>Mes</th>';simFlujo.forEach(f=>h+='<th>'+f.mes+'</th>');h+='</tr></thead><tbody>';const fc=(v,t)=>{const n=typeof v==='object'?v.toNumber():v;if(Math.abs(n)<0.01)return '<td'+(t?' class="total-row-flujo"':'')+'>$0.00</td>';return '<td class="'+(n>0?'positive':'negative')+(t?' total-row-flujo':'')+'">'+fUSD(n)+'</td>';};
+h+='<tr><td class="row-label">Capital</td>';simFlujo.forEach(f=>h+=fc(f.capital));h+='</tr><tr><td class="row-label">CVV</td>';simFlujo.forEach(f=>h+=fc(f.cvv));h+='</tr><tr><td class="row-label">Intereses</td>';simFlujo.forEach(f=>h+=fc(f.intereses));h+='</tr>';
+if(simD.esIndexada){h+='<tr><td class="row-label">Abono CVV</td>';simFlujo.forEach(f=>h+=fc(f.abono));h+='</tr>';}
+h+='<tr><td class="row-label total-row-flujo">Total</td>';simFlujo.forEach(f=>h+=fc(f.total,true));h+='</tr></tbody></table>';$('#sim-tablaFlujo').innerHTML=h;}
+function exportPDF(){const{jsPDF}=window.jspdf;const doc=new jsPDF('p','mm','a4'),pW=210,mg=12;img2b64(LOGO_URL,function(lPB64){let y=mg;if(lPB64)try{doc.addImage(lPB64,'PNG',mg,y,30,8);}catch(e){}if(LOGO_EMP_B64)try{doc.addImage(LOGO_EMP_B64,'PNG',pW-mg-30,y,30,8);}catch(e){}y+=12;doc.setTextColor(10,15,44);doc.setFontSize(13);doc.setFont("helvetica","bold");doc.text("PRESUPUESTO DE EMISION - PAPELES COMERCIALES",pW/2,y,{align:'center'});y+=5;doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(100);doc.text(new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'}),pW-mg,y,{align:'right'});y+=4;doc.setFillColor(226,232,240);doc.rect(mg,y,pW-mg*2,7,'F');doc.setFontSize(10);doc.setFont("helvetica","bold");doc.setTextColor(10,15,44);doc.text(simD.empresa,mg+3,y+5);y+=10;
+doc.autoTable({startY:y,head:[['CARACTERISTICAS','VALOR']],body:[['Monto',fUSD(simD.monto)],['Plazo',simD.plazo+' dias ('+simD.meses+' meses)'],['Tasa Anual',simD.tasa.toFixed(2)+'%'],['Pago Interes',simD.frecuenciaInteres],['Amortizacion',simD.amortizacionCapital],['Tipo Emisor',simD.tipoEmisorTexto],['Tipo Emision',simD.tipoEmisionTexto]],theme:'grid',headStyles:{fillColor:[10,15,44],fontSize:7,cellPadding:1.5},bodyStyles:{fontSize:7,cellPadding:1.5,textColor:[30,41,59]},columnStyles:{1:{halign:'right',fontStyle:'bold'}},margin:{left:mg,right:mg}});
+y=doc.lastAutoTable.finalY+2;let bd=[];if(simD.tasaRegSUNAVAL>0)bd.push(['Registro Nacional SUNAVAL',fPct(simD.tasaRegSUNAVAL),fUSD(simD.registroNacional)]);bd=bd.concat([['Contribucion Anual SUNAVAL','0.50%',fUSD(simD.contribucionAnual)],['Calificacion de Riesgo',simD.tipoEmisorTexto,fUSD(simD.calificacionRiesgo)],['Estructuracion',fPct(simD.tasaEstructuracion),fUSD(simD.estructuracion)],['Colocacion',fPct(simD.tasaColocacion),fUSD(simD.colocacion)],['Representacion',fPct(simD.tasaRepresentacion),fUSD(simD.representacion)],['Aviso de Prensa','Tarifa Plana',fUSD(simD.publicacionAviso)],['BVCC','0.50%',fUSD(simD.bvcc)],['ISIN (CVV)','S/ Plazo',fUSD(simD.inscripcionISIN)],['CVV','0.03% mensual',fUSD(simD.cvvTotal)],['IVA CVV','16%',fUSD(simD.ivaCVV)]]);if(simD.esIndexada)bd.push(['Abono Beneficios CVV','0.09%',fUSD(simD.abonoBeneficiosCVVTotal)]);bd.push([{content:'TOTAL COMISIONES',styles:{fillColor:[226,232,240],fontStyle:'bold',textColor:[10,15,44]}},'',{content:fUSD(simD.totalComisiones),styles:{fillColor:[226,232,240],fontStyle:'bold',halign:'right',textColor:[10,15,44]}}],['Intereses Totales',simD.tasa.toFixed(2)+'%',fUSD(simD.interesesTotales)],[{content:'COSTO TOTAL',styles:{fillColor:[10,15,44],textColor:255,fontStyle:'bold'}},'',{content:fUSD(simD.costoTotalEmision),styles:{fillColor:[10,15,44],textColor:255,fontStyle:'bold',halign:'right'}}],[{content:'% COSTO TOTAL',styles:{fillColor:[187,247,208],textColor:[22,101,52],fontStyle:'bold'}},'',{content:simD.costoFinanciamientoPct.toFixed(2)+'%',styles:{fillColor:[187,247,208],textColor:[22,101,52],fontStyle:'bold',halign:'right'}}]);
+doc.autoTable({startY:y,head:[['CONCEPTO','TASA','MONTO USD']],body:bd,theme:'grid',headStyles:{fillColor:[10,15,44],fontSize:7,cellPadding:1.5},bodyStyles:{fontSize:6.5,cellPadding:1.2,textColor:[30,41,59]},columnStyles:{2:{halign:'right',fontStyle:'bold'}},margin:{left:mg,right:mg}});
+y=doc.lastAutoTable.finalY+4;doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(10,15,44);doc.text("FLUJO DE CAJA DEL EMISOR",mg,y);y+=3;const fH=[['Mes'].concat(simFlujo.map(f=>f.mes.toString()))],fB=[['Capital'].concat(simFlujo.map(f=>fUSD(f.capital))),['CVV'].concat(simFlujo.map(f=>fUSD(f.cvv))),['Intereses'].concat(simFlujo.map(f=>fUSD(f.intereses)))];if(simD.esIndexada)fB.push(['Abono CVV'].concat(simFlujo.map(f=>fUSD(f.abono))));fB.push(['Total'].concat(simFlujo.map(f=>fUSD(f.total))));
+doc.autoTable({startY:y,head:fH,body:fB,theme:'grid',headStyles:{fillColor:[30,58,138],fontSize:5.5,cellPadding:1,halign:'center'},bodyStyles:{fontSize:5,cellPadding:1,halign:'right',textColor:[30,41,59]},columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:14}},margin:{left:mg,right:mg},didParseCell:function(data){const li=simD.esIndexada?4:3;if(data.row.index===li){data.cell.styles.fillColor=[219,234,254];data.cell.styles.fontStyle='bold';}}});
+y=doc.lastAutoTable.finalY+4;doc.setFillColor(254,243,199);doc.rect(mg,y,pW-mg*2,24,'F');doc.setDrawColor(245,158,11);doc.setLineWidth(0.5);doc.rect(mg,y,pW-mg*2,24,'S');y+=5;doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(146,64,14);doc.text("CONDICIONES DE PAGO",mg+3,y);y+=5;doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(120,53,15);['Pago de 50% de estructuracion para inicio','50% restante contra autorizacion SUNAVAL','100% de colocacion y representacion segun monto colocado'].forEach(c=>{doc.text('• '+c,mg+3,y);y+=4;});
+mkWM(LOGO_URL,0.07,function(wm){if(wm)try{doc.addImage(wm,'PNG',(pW-70)/2,115,70,20);}catch(e){}doc.save('Presupuesto_PC_'+simD.empresa+'.pdf');});});}
 
-        // Guardar datos para PDF (convertir a números)
-        d = {
-            empresa: document.getElementById('nombre').value.toUpperCase(),
-            monto: monto.toNumber(),
-            plazo: plazoNum,
-            meses: meses,
-            tasa: tasaNum,
-            frecuenciaInteres,
-            amortizacionCapital,
-            tipoEmisorTexto: esPyme ? 'PYME' : 'No PYME',
-            tipoEmisionTexto: esIndexada ? 'Indexada' : 'En Dólares (USD)',
-            esIndexada: esIndexada,
-            interesesTotales: interesesTotales.toNumber(),
-            registroNacional: registroNacional.toNumber(),
-            tasaRegSUNAVAL: tasaRegSUNAVAL.times(100).toNumber(),
-            contribucionAnual: contribucionAnual.toNumber(),
-            calificacionRiesgo: calificacionRiesgo.toNumber(),
-            estructuracion: estructuracion.toNumber(),
-            tasaEstructuracion: tasaEstructuracionNum,
-            colocacion: colocacion.toNumber(),
-            tasaColocacion: tasaColocacionNum,
-            representacion: representacion.toNumber(),
-            tasaRepresentacion: tasaRepresentacionNum,
-            publicacionAviso: publicacionAviso.toNumber(),
-            bvcc: bvcc.toNumber(),
-            inscripcionISIN: inscripcionISIN.toNumber(),
-            cvvTotal: cvvTotal.toNumber(),
-            ivaCVV: ivaCVV.toNumber(),
-            abonoBeneficiosCVVTotal: abonoBeneficiosCVVTotal.toNumber(),
-            totalComisiones: totalComisiones.toNumber(),
-            costoTotalEmision: costoTotalEmision.toNumber(),
-            costoFinanciamientoPct: costoFinanciamientoPct.toNumber(),
-            capitalNeto: capitalNeto.toNumber(),
-            costosIniciales: costosIniciales.toNumber()
-        };
-
-        // Calcular flujo de caja
-        flujoData = calcularFlujo(montoNum, meses, tasa.toNumber(), frecuenciaInteres, amortizacionCapital, capitalNeto.toNumber(), esIndexada);
-
-        // Mostrar resultados
-        document.getElementById('emptyState').classList.add('hidden');
-        document.getElementById('resultsArea').classList.remove('hidden');
-        document.getElementById('resEmpresa').innerText = d.empresa;
-        document.getElementById('valCostoTotal').innerText = formatUSD(d.costoTotalEmision);
-        document.getElementById('valCostoPct').innerText = d.costoFinanciamientoPct.toFixed(2) + "% sobre capital";
-
-        // Tabla de costos CON explicaciones (solo simulador)
-        let registroRow = '';
-        if (!esPyme) {
-            registroRow = `<tr>
-                <td>Registro Nacional SUNAVAL<span class="formula-hint">= ${formatUSD(d.monto)} × 2%</span></td>
-                <td>${formatPct(d.tasaRegSUNAVAL)}</td>
-                <td style="text-align:right">${formatUSD(d.registroNacional)}</td>
-            </tr>`;
-        }
-
-        let abonoBeneficiosCVVRow = '';
-        if (esIndexada) {
-            abonoBeneficiosCVVRow = `<tr>
-                <td>Abono de Beneficios CVV<span class="formula-hint">= (${formatUSD(d.interesesTotales)} + ${formatUSD(d.monto)}) × 0.09%</span></td>
-                <td>0.09%</td>
-                <td style="text-align:right">${formatUSD(d.abonoBeneficiosCVVTotal)}</td>
-            </tr>`;
-        }
-
-        document.getElementById('tablaDetalle').innerHTML = `
-            <table class="detail-table">
-                <thead><tr><th>Concepto</th><th>Tasa / Base</th><th style="text-align:right">Monto USD</th></tr></thead>
-                <tbody>
-                    <tr class="category-row"><td colspan="3">DESGLOSE DE COSTOS</td></tr>
-                    ${registroRow}
-                    <tr>
-                        <td>Contribución Especial Anual SUNAVAL<span class="formula-hint">= ${formatUSD(d.monto)} × 0.50%</span></td>
-                        <td>0.50%</td>
-                        <td style="text-align:right">${formatUSD(d.contribucionAnual)}</td>
-                    </tr>
-                    <tr>
-                        <td>Calificación de Riesgo<span class="formula-hint">= Tarifa fija según emisor</span></td>
-                        <td>${d.tipoEmisorTexto}</td>
-                        <td style="text-align:right">${formatUSD(d.calificacionRiesgo)}</td>
-                    </tr>
-                    <tr>
-                        <td>Estructuración Legal y Financiera<span class="formula-hint">= ${formatUSD(d.monto)} × ${formatPct(d.tasaEstructuracion)}</span></td>
-                        <td>${formatPct(d.tasaEstructuracion)}</td>
-                        <td style="text-align:right">${formatUSD(d.estructuracion)}</td>
-                    </tr>
-                    <tr>
-                        <td>Colocación en Mercado<span class="formula-hint">= ${formatUSD(d.monto)} × ${formatPct(d.tasaColocacion)}</span></td>
-                        <td>${formatPct(d.tasaColocacion)}</td>
-                        <td style="text-align:right">${formatUSD(d.colocacion)}</td>
-                    </tr>
-                    <tr>
-                        <td>Representación de Tenedores<span class="formula-hint">= ${formatUSD(d.monto)} × ${formatPct(d.tasaRepresentacion)}</span></td>
-                        <td>${formatPct(d.tasaRepresentacion)}</td>
-                        <td style="text-align:right">${formatUSD(d.representacion)}</td>
-                    </tr>
-                    <tr>
-                        <td>Publicación de Aviso de Prensa<span class="formula-hint">= Tarifa fija</span></td>
-                        <td>Tarifa Plana</td>
-                        <td style="text-align:right">${formatUSD(d.publicacionAviso)}</td>
-                    </tr>
-                    <tr>
-                        <td>Bolsa de Valores (BVCC)<span class="formula-hint">= ${formatUSD(d.monto)} × 0.50%</span></td>
-                        <td>0.50%</td>
-                        <td style="text-align:right">${formatUSD(d.bvcc)}</td>
-                    </tr>
-                    <tr>
-                        <td>Inscripción Código ISIN (CVV)<span class="formula-hint">= Según plazo (≤90d:$38, ≤180d:$80, ≤270d:$118, >270d:$160)</span></td>
-                        <td>S/ Plazo</td>
-                        <td style="text-align:right">${formatUSD(d.inscripcionISIN)}</td>
-                    </tr>
-                    <tr>
-                        <td>Custodia Caja de Valores (CVV)<span class="formula-hint">= ${formatUSD(d.monto)} × 0.03% × ${d.meses} meses</span></td>
-                        <td>0.03% mensual</td>
-                        <td style="text-align:right">${formatUSD(d.cvvTotal)}</td>
-                    </tr>
-                    <tr>
-                        <td>IVA sobre CVV<span class="formula-hint">= ${formatUSD(d.cvvTotal)} × 16%</span></td>
-                        <td>16%</td>
-                        <td style="text-align:right">${formatUSD(d.ivaCVV)}</td>
-                    </tr>
-                    ${abonoBeneficiosCVVRow}
-                    <tr class="subtotal-row"><td colspan="2">TOTAL COMISIONES Y GASTOS</td><td style="text-align:right">${formatUSD(d.totalComisiones)}</td></tr>
-                    <tr>
-                        <td>Intereses Totales Proyectados<span class="formula-hint">= ${formatUSD(d.monto)} × ${d.tasa}% × (${d.plazo} ÷ 360)</span></td>
-                        <td>${d.tasa.toFixed(2)}% anual</td>
-                        <td style="text-align:right">${formatUSD(d.interesesTotales)}</td>
-                    </tr>
-                    <tr class="total-row"><td colspan="2">COSTO TOTAL DE FINANCIAMIENTO</td><td style="text-align:right">${formatUSD(d.costoTotalEmision)}</td></tr>
-                    <tr style="background:#bbf7d0;"><td colspan="2" style="font-weight:800;color:#166534;font-size:1rem;">% COSTO TOTAL DE FINANCIAMIENTO<span class="formula-hint" style="color:#166534;">= ${formatUSD(d.costoTotalEmision)} ÷ ${formatUSD(d.monto)} × 100</span></td><td style="text-align:right;color:#166534;font-size:1.15rem;font-weight:900;">${d.costoFinanciamientoPct.toFixed(2)}%</td></tr>
-                </tbody>
-            </table>`;
-
-        renderizarTablaFlujo();
-    }
-
-    function renderizarTablaFlujo() {
-        let html = '<table class="flujo-table"><thead><tr><th>Mes</th>';
-        flujoData.forEach(f => html += `<th>${f.mes}</th>`);
-        html += '</tr></thead><tbody>';
-
-        const formatCell = (val, isTotal = false) => {
-            const num = typeof val === 'object' ? val.toNumber() : val;
-            if (Math.abs(num) < 0.01) return `<td ${isTotal ? 'class="total-row-flujo"' : ''}>$0.00</td>`;
-            const cls = num > 0 ? 'positive' : 'negative';
-            return `<td class="${cls} ${isTotal ? 'total-row-flujo' : ''}">${formatUSD(num)}</td>`;
-        };
-
-        html += '<tr><td class="row-label">Capital</td>';
-        flujoData.forEach(f => html += formatCell(f.capital));
-        html += '</tr>';
-
-        html += '<tr><td class="row-label">CVV</td>';
-        flujoData.forEach(f => html += formatCell(f.cvv));
-        html += '</tr>';
-
-        html += '<tr><td class="row-label">Intereses</td>';
-        flujoData.forEach(f => html += formatCell(f.intereses));
-        html += '</tr>';
-
-        // Solo mostrar fila de Abono de Beneficios CVV si aplica
-        if (d.esIndexada) {
-            html += '<tr><td class="row-label">Abono CVV</td>';
-            flujoData.forEach(f => html += formatCell(f.abonoBeneficiosCVV));
-            html += '</tr>';
-        }
-
-        html += '<tr><td class="row-label total-row-flujo">Total</td>';
-        flujoData.forEach(f => html += formatCell(f.total, true));
-        html += '</tr>';
-
-        html += '</tbody></table>';
-        document.getElementById('tablaFlujo').innerHTML = html;
-    }
-
-    function exportarPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = 210, margin = 12;
-
-        convertirImagenABase64(LOGO_PERCAPITAL_URL, function(logoPerBase64) {
-            let y = margin;
-            if (logoPerBase64) try { doc.addImage(logoPerBase64, 'PNG', margin, y, 30, 8); } catch(e) {}
-            if (LOGO_EMPRESA_BASE64) try { doc.addImage(LOGO_EMPRESA_BASE64, 'PNG', pageWidth - margin - 30, y, 30, 8); } catch(e) {}
-
-            y += 12;
-            doc.setTextColor(10, 15, 44); doc.setFontSize(13); doc.setFont("helvetica", "bold");
-            doc.text("PRESUPUESTO DE EMISIÓN - PAPELES COMERCIALES", pageWidth / 2, y, {align: 'center'});
-
-            y += 5;
-            doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
-            doc.text(new Date().toLocaleDateString('es-ES', {year: 'numeric', month: 'long', day: 'numeric'}), pageWidth - margin, y, {align: 'right'});
-
-            y += 4;
-            doc.setFillColor(226, 232, 240); doc.rect(margin, y, pageWidth - margin*2, 7, 'F');
-            doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(10, 15, 44);
-            doc.text(d.empresa, margin + 3, y + 5);
-
-            y += 10;
-            doc.autoTable({
-                startY: y,
-                head: [['CARACTERÍSTICAS', 'VALOR']],
-                body: [
-                    ['Monto', formatUSD(d.monto)],
-                    ['Plazo', d.plazo + " días (" + d.meses + " meses)"],
-                    ['Tasa Anual', d.tasa.toFixed(2) + "%"],
-                    ['Pago Interés', d.frecuenciaInteres],
-                    ['Amortización', d.amortizacionCapital],
-                    ['Tipo Emisor', d.tipoEmisorTexto],
-                    ['Tipo Emisión', d.tipoEmisionTexto]
-                ],
-                theme: 'grid',
-                headStyles: { fillColor: [10, 15, 44], fontSize: 7, cellPadding: 1.5, fontStyle: 'bold' },
-                bodyStyles: { fontSize: 7, cellPadding: 1.5, textColor: [30, 41, 59] },
-                columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
-                margin: { left: margin, right: margin }
-            });
-
-            y = doc.lastAutoTable.finalY + 2;
-            
-            // Tabla de costos SIN explicaciones (limpia para cliente)
-            let bodyData = [];
-            if (d.tasaRegSUNAVAL > 0) bodyData.push(['Registro Nacional SUNAVAL', formatPct(d.tasaRegSUNAVAL), formatUSD(d.registroNacional)]);
-            bodyData = bodyData.concat([
-                ['Contribución Especial Anual SUNAVAL', '0.50%', formatUSD(d.contribucionAnual)],
-                ['Calificación de Riesgo', d.tipoEmisorTexto, formatUSD(d.calificacionRiesgo)],
-                ['Estructuración Legal y Financiera', formatPct(d.tasaEstructuracion), formatUSD(d.estructuracion)],
-                ['Colocación en Mercado', formatPct(d.tasaColocacion), formatUSD(d.colocacion)],
-                ['Representación de Tenedores', formatPct(d.tasaRepresentacion), formatUSD(d.representacion)],
-                ['Publicación de Aviso de Prensa', 'Tarifa Plana', formatUSD(d.publicacionAviso)],
-                ['Bolsa de Valores (BVCC)', '0.50%', formatUSD(d.bvcc)],
-                ['Inscripción Código ISIN (CVV)', 'S/ Plazo', formatUSD(d.inscripcionISIN)],
-                ['Custodia Caja de Valores (CVV)', '0.03% mensual', formatUSD(d.cvvTotal)],
-                ['IVA sobre CVV', '16%', formatUSD(d.ivaCVV)]
-            ]);
-
-            // Agregar Abono de Beneficios CVV si aplica
-            if (d.esIndexada) {
-                bodyData.push(['Abono de Beneficios CVV', '0.09%', formatUSD(d.abonoBeneficiosCVVTotal)]);
-            }
-
-            bodyData = bodyData.concat([
-                [{content: 'TOTAL COMISIONES Y GASTOS', styles: {fillColor: [226, 232, 240], fontStyle: 'bold', textColor: [10, 15, 44]}}, '', {content: formatUSD(d.totalComisiones), styles: {fillColor: [226, 232, 240], fontStyle: 'bold', halign: 'right', textColor: [10, 15, 44]}}],
-                ['Intereses Totales Proyectados', d.tasa.toFixed(2)+'%', formatUSD(d.interesesTotales)],
-                [{content: 'COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [10, 15, 44], textColor: 255, fontStyle: 'bold'}}, '', {content: formatUSD(d.costoTotalEmision), styles: {fillColor: [10, 15, 44], textColor: 255, fontStyle: 'bold', halign: 'right'}}],
-                [{content: '% COSTO TOTAL DE FINANCIAMIENTO', styles: {fillColor: [187, 247, 208], textColor: [22, 101, 52], fontStyle: 'bold'}}, '', {content: d.costoFinanciamientoPct.toFixed(2) + '%', styles: {fillColor: [187, 247, 208], textColor: [22, 101, 52], fontStyle: 'bold', halign: 'right'}}]
-            ]);
-            
-            doc.autoTable({
-                startY: y,
-                head: [['CONCEPTO', 'TASA/BASE', 'MONTO USD']],
-                body: bodyData,
-                theme: 'grid',
-                headStyles: { fillColor: [10, 15, 44], fontSize: 7, cellPadding: 1.5, fontStyle: 'bold' },
-                bodyStyles: { fontSize: 6.5, cellPadding: 1.2, textColor: [30, 41, 59] },
-                columnStyles: { 2: { halign: 'right', fontStyle: 'bold' } },
-                margin: { left: margin, right: margin }
-            });
-
-            // Flujo de caja
-            y = doc.lastAutoTable.finalY + 4;
-            doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(10, 15, 44);
-            doc.text("FLUJO DE CAJA DEL EMISOR", margin, y);
-            y += 3;
-
-            const flujoHead = [['Mes'].concat(flujoData.map(f => f.mes.toString()))];
-            const flujoBodyRows = [
-                ['Capital'].concat(flujoData.map(f => formatUSD(f.capital))),
-                ['CVV'].concat(flujoData.map(f => formatUSD(f.cvv))),
-                ['Intereses'].concat(flujoData.map(f => formatUSD(f.intereses)))
-            ];
-
-            // Agregar fila de Abono de Beneficios CVV si aplica
-            if (d.esIndexada) {
-                flujoBodyRows.push(['Abono CVV'].concat(flujoData.map(f => formatUSD(f.abonoBeneficiosCVV))));
-            }
-
-            flujoBodyRows.push(['Total'].concat(flujoData.map(f => formatUSD(f.total))));
-
-            doc.autoTable({
-                startY: y,
-                head: flujoHead,
-                body: flujoBodyRows,
-                theme: 'grid',
-                headStyles: { fillColor: [30, 58, 138], fontSize: 5.5, cellPadding: 1, halign: 'center', fontStyle: 'bold' },
-                bodyStyles: { fontSize: 5, cellPadding: 1, halign: 'right', textColor: [30, 41, 59] },
-                columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 14 } },
-                margin: { left: margin, right: margin },
-                didParseCell: function(data) {
-                    const lastRowIndex = d.esIndexada ? 4 : 3;
-                    if (data.row.index === lastRowIndex) {
-                        data.cell.styles.fillColor = [219, 234, 254];
-                        data.cell.styles.fontStyle = 'bold';
-                    }
-                }
-            });
-
-            // Condiciones
-            y = doc.lastAutoTable.finalY + 4;
-            doc.setFillColor(254, 243, 199);
-            doc.rect(margin, y, pageWidth - margin*2, 28, 'F');
-            doc.setDrawColor(245, 158, 11);
-            doc.setLineWidth(0.5);
-            doc.rect(margin, y, pageWidth - margin*2, 28, 'S');
-            
-            y += 5;
-            doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(146, 64, 14);
-            doc.text("CONDICIONES DE PAGO", margin + 3, y);
-            
-            y += 5;
-            doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(120, 53, 15);
-            const conds = [
-                "• Pago de 50% de la comisión de estructuración para inicio del proceso",
-                "• Pago del 50% restante de honorarios de estructuración contra autorización SUNAVAL",
-                "• Pago del 100% de la comisión de colocación y representación según monto efectivamente colocado"
-            ];
-            conds.forEach(c => { doc.text(c, margin + 3, y); y += 4; });
-            
-            y += 1;
-            doc.setFontSize(6); doc.setFont("helvetica", "italic");
-            doc.text("Nota: Los montos son estimados y pueden variar. Para mayor información, contactar a Per Capital.", margin + 3, y);
-
-            // MARCA DE AGUA
-            crearMarcaDeAgua(LOGO_PERCAPITAL_URL, 0.07, function(wmBase64) {
-                if (wmBase64) {
-                    try { doc.addImage(wmBase64, 'PNG', (pageWidth - 70) / 2, 115, 70, 20); } catch(e) {}
-                }
-                doc.save(`Presupuesto_PC_${d.empresa}.pdf`);
-            });
-        });
-    }
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded',()=>{
+checkSession();
+$('#login-form').addEventListener('submit',handleLogin);
+$('#logout-btn').addEventListener('click',handleLogout);
+// Nav dropdown
+$('#nav-dashboard-btn').addEventListener('click',toggleDropdown);
+$('.nav-direct-btn[data-tab="simulador"]').addEventListener('click',()=>switchTab('simulador'));
+$$('#nav-dashboard-menu a').forEach(a=>a.addEventListener('click',(e)=>{e.preventDefault();navTo(a.dataset.nav);}));
+document.addEventListener('click',(e)=>{if(!e.target.closest('.nav-dropdown'))closeDropdown();});
+$('#add-company-btn').addEventListener('click',addEmpresa);
+$('#delete-company-btn').addEventListener('click',delEmpresa);
+$('#company-select').addEventListener('change',e=>selEmpresa(e.target.value||null));
+$$('.folder').forEach(f=>{f.querySelector('.folder-header').addEventListener('click',()=>{if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const c=f.querySelector('.folder-content'),h=f.querySelector('.folder-header');c.classList.toggle('hidden');h.classList.toggle('expanded');h.querySelector('svg').classList.toggle('rotate-180');});});
+$$('.recaudo-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(!currentEmpresaId)return;const k=cb.dataset.recaudo,c=recaudosCache[k]||{metadata_json:{}};qSave(k,cb.checked,c.metadata_json||{});recaudosCache[k]={...c,estado_booleano:cb.checked,metadata_json:c.metadata_json||{}};updProg();if(k==='legal-empresa-matrix')checkMatrix();});});
+$$('.recaudo-number').forEach(inp=>{let db;inp.addEventListener('input',()=>{if(!currentEmpresaId)return;clearTimeout(db);db=setTimeout(()=>{const k=inp.dataset.recaudo,v=inp.value;qSave(k,v!=='',{value:v});recaudosCache[k]={...(recaudosCache[k]||{}),estado_booleano:v!=='',metadata_json:{value:v}};updProg();},400);});});
+$('#btn-empresa-matrix').addEventListener('click',e=>{e.stopPropagation();toggleMatrix();});
+setupFileDsp('file-acta-constitutiva','acta-constitutiva-file-name');
+setupFileDsp('file-aumento-capital','aumento-capital-file-name');
+setupFileDsp('file-marca-document','marca-document-file-name');
+$('#add-acta-constitutiva-btn').addEventListener('click',async()=>{if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const d=$('#acta-constitutiva-date'),fi=document.getElementById('file-acta-constitutiva'),fs=$('#acta-constitutiva-file-name'),dt=d.value,f=fi.files[0];if(!dt&&!f){showMsg('Ingresa fecha o archivo.','info');return;}let fp=null,fn='';if(f){fp=await uploadFile(f);fn=f.name;}await addItem('legal-actas','list-acta-constitutiva','file',{date:dt,fileName:fn,filePath:fp});d.value='';fi.value='';fs.textContent='';showMsg('Acta anadida.','success');});
+$('#add-aumento-capital-btn').addEventListener('click',async()=>{if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const d=$('#aumento-capital-date'),fi=document.getElementById('file-aumento-capital'),fs=$('#aumento-capital-file-name'),dt=d.value,f=fi.files[0];if(!dt&&!f){showMsg('Ingresa fecha o archivo.','info');return;}let fp=null,fn='';if(f){fp=await uploadFile(f);fn=f.name;}await addItem('legal-aumentos','list-aumento-capital','file',{date:dt,fileName:fn,filePath:fp});d.value='';fi.value='';fs.textContent='';showMsg('Aumento anadido.','success');});
+$('#add-licencia-btn').addEventListener('click',async()=>{if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const i=$('#admin-licencia-name'),n=i.value.trim();if(!n){showMsg('Ingresa nombre.','info');return;}await addItem('admin-licencias','list-licencias','text',{name:n});i.value='';showMsg('Licencia anadida.','success');});
+$('#add-rrhh-item-btn').addEventListener('click',async()=>{if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const i=$('#admin-rrhh-item-name'),n=i.value.trim();if(!n){showMsg('Ingresa item.','info');return;}await addItem('admin-rrhh','list-rrhh-items','text',{name:n});i.value='';showMsg('Item RRHH anadido.','success');});
+$('#add-marca-rrss-btn').addEventListener('click',async()=>{if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const bi=$('#actividad-marca-name'),fi=document.getElementById('file-marca-document'),fs=$('#marca-document-file-name'),ri=$('#actividad-rrss-link'),bn=bi.value.trim(),f=fi.files[0],rl=ri.value.trim();if(!bn&&!f&&!rl){showMsg('Completa al menos un campo.','info');return;}let fp=null,fn='';if(f){fp=await uploadFile(f);fn=f.name;}await addItem('actividad-marcas','list-marcas-rrss','marca',{brandName:bn,fileName:fn,filePath:fp,rrssLink:rl});bi.value='';fi.value='';fs.textContent='';ri.value='';showMsg('Marca anadida.','success');});
+document.addEventListener('click',e=>{if(e.target.classList.contains('remove-item-btn')&&currentEmpresaId){removeItem(e.target.dataset.key,e.target.dataset.list,e.target.dataset.type,parseInt(e.target.dataset.index),e.target.dataset.filepath||null);}});
+$('#sim-calcular-btn').addEventListener('click',genPresup);
+$('#sim-pdf-btn').addEventListener('click',exportPDF);
+});
 </script>
 </body>
 </html>
