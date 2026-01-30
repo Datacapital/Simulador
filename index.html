@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Per Capital | Tesoreria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>if(window.tailwind)tailwind.config={corePlugins:{preflight:true}}</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -395,7 +396,14 @@
 // ==================== SUPABASE ====================
 const SUPABASE_URL = '__SUPABASE_URL__';
 const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = null;
+let supabaseReady = false;
+try {
+    if(SUPABASE_URL && SUPABASE_URL.startsWith('http')){
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseReady = true;
+    }
+} catch(e){ console.warn('Supabase no configurado:',e.message); }
 
 // ==================== STATE ====================
 let currentUser = null, currentEmpresaId = null, empresasList = [], recaudosCache = {}, realtimeChannel = null, saveQueue = Promise.resolve(), syncTO = null;
@@ -436,37 +444,47 @@ function navTo(target){
     },100);
 }
 
-// ==================== AUTH ====================
+// ==================== AUTH (Local password only) ====================
 const APP_PASSWORD='Teso_2020*';
-const AUTO_EMAIL='tesoreria@percapital.com';
-async function handleLogin(e){e.preventDefault();const pw=$('#login-password').value,err=$('#login-error'),btn=$('#login-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Verificando...';err.classList.add('hidden');if(pw!==APP_PASSWORD){err.textContent='Clave incorrecta';err.classList.remove('hidden');btn.disabled=false;btn.textContent='Ingresar';return;}try{const{data,error}=await sb.auth.signInWithPassword({email:AUTO_EMAIL,password:pw});if(error)throw error;currentUser=data.user;showApp();}catch(er){currentUser={id:'local-user',email:AUTO_EMAIL,user_metadata:{full_name:'Tesoreria Per Capital'}};showApp();}finally{btn.disabled=false;btn.textContent='Ingresar';}}
-async function handleLogout(){unsubRT();await sb.auth.signOut();currentUser=null;currentEmpresaId=null;$('#login-screen').classList.remove('hidden');$('#app-root').classList.add('hidden');}
-async function checkSession(){const{data:{user}}=await sb.auth.getUser();if(user){currentUser=user;showApp();}}
+const LOCAL_USER={id:'percapital-tesoreria',email:'tesoreria@percapital.com',user_metadata:{full_name:'Per Capital'}};
+
+function handleLogin(e){
+    e.preventDefault();
+    const pw=$('#login-password').value,err=$('#login-error'),btn=$('#login-btn');
+    btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Verificando...';err.classList.add('hidden');
+    if(pw!==APP_PASSWORD){err.textContent='Clave incorrecta';err.classList.remove('hidden');btn.disabled=false;btn.textContent='Ingresar';return;}
+    currentUser=LOCAL_USER;
+    localStorage.setItem('pc_session','1');
+    btn.disabled=false;btn.textContent='Ingresar';
+    showApp();
+}
+function handleLogout(){unsubRT();currentUser=null;currentEmpresaId=null;localStorage.removeItem('pc_session');$('#login-screen').classList.remove('hidden');$('#app-root').classList.add('hidden');}
+function checkSession(){if(localStorage.getItem('pc_session')==='1'){currentUser=LOCAL_USER;showApp();}}
 function showApp(){$('#login-screen').classList.add('hidden');$('#app-root').classList.remove('hidden');const m=currentUser.user_metadata||{};$('#user-display').textContent=(m.full_name||m.name||currentUser.email)+' | Departamento de Tesoreria';loadEmpresas();}
 
 // ==================== EMPRESAS ====================
-async function loadEmpresas(){try{const{data,error}=await sb.from('empresas').select('*').eq('usuario_id',currentUser.id).order('fecha_creacion',{ascending:false});if(error)throw error;empresasList=data||[];renderCompSel();}catch(e){showMsg('Error: '+e.message,'error');}}
+async function loadEmpresas(){if(!supabaseReady){empresasList=[];renderCompSel();return;}try{const{data,error}=await sb.from('empresas').select('*').eq('usuario_id',currentUser.id).order('fecha_creacion',{ascending:false});if(error)throw error;empresasList=data||[];renderCompSel();}catch(e){showMsg('Error cargando empresas: '+e.message,'error');}}
 function renderCompSel(){const s=$('#company-select');s.innerHTML='<option value="">-- Seleccionar Empresa --</option>';empresasList.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.nombre;s.appendChild(o);});if(currentEmpresaId)s.value=currentEmpresaId;}
-async function addEmpresa(){const n=$('#new-company-name').value.trim();if(!n){showMsg('Ingresa nombre.','info');return;}if(empresasList.some(e=>e.nombre===n)){showMsg('Ya existe.','error');return;}showSync('saving');try{const{data,error}=await sb.from('empresas').insert([{nombre:n,usuario_id:currentUser.id}]).select().single();if(error)throw error;empresasList.unshift(data);currentEmpresaId=data.id;renderCompSel();$('#new-company-name').value='';await selEmpresa(data.id);showMsg('Empresa "'+n+'" creada.','success');showSync('ok');}catch(e){showMsg('Error: '+e.message,'error');showSync('error');}}
-async function delEmpresa(){if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}const emp=empresasList.find(e=>e.id===currentEmpresaId);if(!confirm('Eliminar "'+emp?.nombre+'"?'))return;showSync('saving');try{await sb.from('recaudos').delete().eq('empresa_id',currentEmpresaId);await sb.from('empresas').delete().eq('id',currentEmpresaId);empresasList=empresasList.filter(e=>e.id!==currentEmpresaId);currentEmpresaId=null;unsubRT();renderCompSel();$('#recaudos-section').classList.add('hidden');$('#progress-summary').classList.add('hidden');resetUI();showMsg('Eliminada.','success');showSync('ok');}catch(e){showMsg('Error: '+e.message,'error');showSync('error');}}
+async function addEmpresa(){const n=$('#new-company-name').value.trim();if(!n){showMsg('Ingresa nombre.','info');return;}if(empresasList.some(e=>e.nombre===n)){showMsg('Ya existe.','error');return;}if(!supabaseReady){showMsg('Base de datos no configurada.','error');return;}showSync('saving');try{const{data,error}=await sb.from('empresas').insert([{nombre:n,usuario_id:currentUser.id}]).select().single();if(error)throw error;empresasList.unshift(data);currentEmpresaId=data.id;renderCompSel();$('#new-company-name').value='';await selEmpresa(data.id);showMsg('Empresa "'+n+'" creada.','success');showSync('ok');}catch(e){showMsg('Error: '+e.message,'error');showSync('error');}}
+async function delEmpresa(){if(!currentEmpresaId){showMsg('Selecciona empresa.','info');return;}if(!supabaseReady){showMsg('Base de datos no configurada.','error');return;}const emp=empresasList.find(e=>e.id===currentEmpresaId);if(!confirm('Eliminar "'+emp?.nombre+'"?'))return;showSync('saving');try{await sb.from('recaudos').delete().eq('empresa_id',currentEmpresaId);await sb.from('empresas').delete().eq('id',currentEmpresaId);empresasList=empresasList.filter(e=>e.id!==currentEmpresaId);currentEmpresaId=null;unsubRT();renderCompSel();$('#recaudos-section').classList.add('hidden');$('#progress-summary').classList.add('hidden');resetUI();showMsg('Eliminada.','success');showSync('ok');}catch(e){showMsg('Error: '+e.message,'error');showSync('error');}}
 async function selEmpresa(id){if(!id){currentEmpresaId=null;$('#recaudos-section').classList.add('hidden');$('#progress-summary').classList.add('hidden');resetUI();return;}currentEmpresaId=id;$('#company-select').value=id;resetUI();await loadRecaudos();subRT();$('#recaudos-section').classList.remove('hidden');$('#progress-summary').classList.remove('hidden');}
 
 // ==================== RECAUDOS ====================
-async function loadRecaudos(){try{const{data,error}=await sb.from('recaudos').select('*').eq('empresa_id',currentEmpresaId);if(error)throw error;recaudosCache={};(data||[]).forEach(r=>{recaudosCache[r.nombre_recaudo]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};});popUI();}catch(e){showMsg('Error: '+e.message,'error');}}
+async function loadRecaudos(){if(!supabaseReady){recaudosCache={};popUI();return;}try{const{data,error}=await sb.from('recaudos').select('*').eq('empresa_id',currentEmpresaId);if(error)throw error;recaudosCache={};(data||[]).forEach(r=>{recaudosCache[r.nombre_recaudo]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};});popUI();}catch(e){showMsg('Error: '+e.message,'error');}}
 function popUI(){$$('.recaudo-checkbox').forEach(cb=>{const k=cb.dataset.recaudo,c=recaudosCache[k];cb.checked=c?(c.metadata_json?.aplica===false?false:c.estado_booleano):false;});const mc=recaudosCache['legal-empresa-matrix'],mb=$('#btn-empresa-matrix');mb.classList.remove('aplica','no-aplica');mb.textContent='Aplica / No Aplica';if(mc?.metadata_json){if(mc.metadata_json.aplica===true){mb.classList.add('aplica');mb.textContent='Aplica';}else if(mc.metadata_json.aplica===false){mb.classList.add('no-aplica');mb.textContent='No Aplica';}}
 $$('.recaudo-number').forEach(i=>{const c=recaudosCache[i.dataset.recaudo];i.value=c?.metadata_json?.value!=null?c.metadata_json.value:'';});
 LIST_RECAUDOS.forEach(lr=>{const c=recaudosCache[lr.key];renderList(lr.listId,c?.metadata_json?.items||[],lr.key,lr.type);});checkMatrix();updProg();}
 function qSave(n,e,m){saveQueue=saveQueue.then(()=>saveRec(n,e,m)).catch(()=>{});}
-async function saveRec(n,e,m){if(!currentEmpresaId)return;showSync('saving');try{const ex=recaudosCache[n];let r;if(ex?.id){const{data,error}=await sb.from('recaudos').update({estado_booleano:e,metadata_json:m}).eq('id',ex.id).select().single();if(error)throw error;r=data;}else{const{data,error}=await sb.from('recaudos').insert([{empresa_id:currentEmpresaId,nombre_recaudo:n,estado_booleano:e,metadata_json:m}]).select().single();if(error)throw error;r=data;}recaudosCache[n]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};showSync('ok');}catch(e){console.error(e);showSync('error');}}
-async function delRecName(n){if(!currentEmpresaId)return;showSync('saving');try{await sb.from('recaudos').delete().eq('empresa_id',currentEmpresaId).eq('nombre_recaudo',n);delete recaudosCache[n];showSync('ok');}catch(e){showSync('error');}}
+async function saveRec(n,e,m){if(!currentEmpresaId||!supabaseReady)return;showSync('saving');try{const ex=recaudosCache[n];let r;if(ex?.id){const{data,error}=await sb.from('recaudos').update({estado_booleano:e,metadata_json:m}).eq('id',ex.id).select().single();if(error)throw error;r=data;}else{const{data,error}=await sb.from('recaudos').insert([{empresa_id:currentEmpresaId,nombre_recaudo:n,estado_booleano:e,metadata_json:m}]).select().single();if(error)throw error;r=data;}recaudosCache[n]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};showSync('ok');}catch(e){console.error(e);showSync('error');}}
+async function delRecName(n){if(!currentEmpresaId||!supabaseReady)return;showSync('saving');try{await sb.from('recaudos').delete().eq('empresa_id',currentEmpresaId).eq('nombre_recaudo',n);delete recaudosCache[n];showSync('ok');}catch(e){showSync('error');}}
 
 // ==================== REALTIME ====================
-function subRT(){unsubRT();if(!currentEmpresaId)return;realtimeChannel=sb.channel('rec-'+currentEmpresaId).on('postgres_changes',{event:'*',schema:'public',table:'recaudos',filter:'empresa_id=eq.'+currentEmpresaId},(p)=>{if(p.eventType==='INSERT'||p.eventType==='UPDATE'){const r=p.new;recaudosCache[r.nombre_recaudo]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};}else if(p.eventType==='DELETE'&&p.old?.nombre_recaudo)delete recaudosCache[p.old.nombre_recaudo];popUI();}).subscribe();}
-function unsubRT(){if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}}
+function subRT(){unsubRT();if(!currentEmpresaId||!supabaseReady)return;realtimeChannel=sb.channel('rec-'+currentEmpresaId).on('postgres_changes',{event:'*',schema:'public',table:'recaudos',filter:'empresa_id=eq.'+currentEmpresaId},(p)=>{if(p.eventType==='INSERT'||p.eventType==='UPDATE'){const r=p.new;recaudosCache[r.nombre_recaudo]={id:r.id,estado_booleano:r.estado_booleano,metadata_json:r.metadata_json||{}};}else if(p.eventType==='DELETE'&&p.old?.nombre_recaudo)delete recaudosCache[p.old.nombre_recaudo];popUI();}).subscribe();}
+function unsubRT(){if(realtimeChannel&&supabaseReady){sb.removeChannel(realtimeChannel);realtimeChannel=null;}}
 
 // ==================== STORAGE ====================
-async function uploadFile(file){if(!currentUser||!currentEmpresaId)return null;const ext=file.name.split('.').pop(),path=currentUser.id+'/'+currentEmpresaId+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;showSync('saving');try{const{error}=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{cacheControl:'3600',upsert:true});if(error)throw error;showSync('ok');return path;}catch(e){showSync('error');showMsg('Error subiendo: '+e.message,'error');return null;}}
-async function delFile(p){if(!p)return;try{await sb.storage.from(STORAGE_BUCKET).remove([p]);}catch(e){}}
+async function uploadFile(file){if(!currentUser||!currentEmpresaId||!supabaseReady)return null;const ext=file.name.split('.').pop(),path=currentUser.id+'/'+currentEmpresaId+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;showSync('saving');try{const{error}=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{cacheControl:'3600',upsert:true});if(error)throw error;showSync('ok');return path;}catch(e){showSync('error');showMsg('Error subiendo: '+e.message,'error');return null;}}
+async function delFile(p){if(!p||!supabaseReady)return;try{await sb.storage.from(STORAGE_BUCKET).remove([p]);}catch(e){}}
 
 // ==================== LISTS ====================
 function renderList(id,items,dk,type){const ul=document.getElementById(id);ul.innerHTML='';if(!items?.length)return;items.forEach((it,i)=>{const li=document.createElement('li');li.className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 bg-gray-900 rounded-md border border-green-700';let c='';if(type==='file')c='<strong class="theme-text-light-gray">Fecha:</strong> '+(it.date||'N/A')+' | <strong class="theme-text-light-gray">Archivo:</strong> '+(it.fileName||'No anexado');else if(type==='text')c='<strong class="theme-text-light-gray">'+(it.name||'N/A')+'</strong>';else if(type==='marca')c='<div><strong>Marca:</strong> '+(it.brandName||'N/A')+'<br><strong>Archivo:</strong> '+(it.fileName||'No anexado')+'<br><strong>RRSS:</strong> <a href="'+(it.rrssLink||'#')+'" target="_blank" class="theme-accent-green">'+(it.rrssLink||'N/A')+'</a></div>';li.innerHTML='<span class="theme-text-light-gray">'+c+'</span><button type="button" class="remove-item-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600 mt-2 sm:mt-0" data-index="'+i+'" data-key="'+dk+'" data-list="'+id+'" data-type="'+type+'" '+(it.filePath?'data-filepath="'+it.filePath+'"':'')+'>Eliminar</button>';ul.appendChild(li);});}
