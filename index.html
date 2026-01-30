@@ -171,6 +171,19 @@
         .sim-wrap .indexada-alert { background:#fef3c7; border:1.5px solid #f59e0b; border-radius:8px; padding:10px 12px; margin:12px 0; font-size:.7rem; color:#92400e; font-weight:600; }
         .sim-wrap .logo-upload-section { background:#f0f3f5; border-left:4px solid var(--steel); padding:12px; margin:12px 0; font-size:.8rem; color:var(--navy); font-weight:600; border-radius:0 8px 8px 0; }
         .sim-wrap .logo-upload-section input[type="file"] { margin-top:6px; font-size:.75rem; }
+        /* === CONTROL CENTER STATUS CARDS === */
+        .status-card { background:rgba(0,0,50,.3); border:1px solid var(--glass-border); border-radius:12px; padding:14px 16px; cursor:pointer; transition:all .3s; position:relative; overflow:hidden; }
+        .status-card:hover { border-color:var(--steel); transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.2); }
+        .status-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, var(--steel), #6d8a96); opacity:0; transition:opacity .3s; }
+        .status-card:hover::before { opacity:1; }
+        .status-card-icon { font-size:1.4rem; margin-bottom:6px; }
+        .status-card-title { font-size:.75rem; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+        .status-card-count { font-size:1.1rem; font-weight:800; color:var(--steel-light); margin-bottom:8px; }
+        .status-card-bar { width:100%; height:4px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; }
+        .status-card-fill { height:100%; background:linear-gradient(90deg, var(--steel), #6d8a96); border-radius:4px; transition:width .8s cubic-bezier(.4,0,.2,1); width:0%; }
+        .status-card.complete { border-color:rgba(110,231,183,.3); }
+        .status-card.complete .status-card-fill { background:linear-gradient(90deg, #059669, #6ee7b7); }
+        .status-card.complete .status-card-count { color:#6ee7b7; }
         /* === RESPONSIVE === */
         @media(max-width:1100px) { .header-inner { flex-wrap:wrap; gap:12px; } .nav-container { margin-left:0; width:100%; justify-content:center; } }
         @media(max-width:900px) { .sim-wrap { grid-template-columns:1fr; } .sim-sidebar,.sim-main { max-height:none; } }
@@ -234,18 +247,69 @@
     </header>
 
     <!-- ==================== TAB: DASHBOARD ==================== -->
-    <div id="tab-dashboard" class="tab-content active p-4 sm:p-6 md:p-8 max-w-5xl mx-auto space-y-6">
-        <div class="glass-card animate-in">
-            <h2 style="font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:18px;letter-spacing:.3px;">Administrar Empresas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                <input type="text" id="new-company-name" placeholder="Nombre de la nueva empresa" class="input-glass">
-                <button id="add-company-btn" class="btn-primary">Anadir Empresa</button>
+    <div id="tab-dashboard" class="tab-content active p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+        <!-- CENTRO DE CONTROL -->
+        <div class="glass-card animate-in" style="padding:2rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h2 style="font-size:1.3rem;font-weight:800;color:#fff;letter-spacing:.5px;margin:0;">Centro de Control</h2>
+                    <p style="color:var(--steel);font-size:.82rem;margin-top:4px;">Panel ejecutivo de emisiones</p>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="text" id="new-company-name" placeholder="Nueva empresa..." class="input-glass" style="width:220px;padding:10px 14px;font-size:.85rem;">
+                    <button id="add-company-btn" class="btn-primary" style="padding:10px 18px;font-size:.85rem;white-space:nowrap;">+ Agregar</button>
+                </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                <select id="company-select" class="input-glass"><option value="">-- Seleccionar Empresa --</option></select>
-                <button id="delete-company-btn" class="btn-danger">Eliminar Empresa</button>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+                <select id="company-select" class="input-glass" style="flex:1;min-width:200px;"><option value="">-- Seleccionar Empresa --</option></select>
+                <button id="delete-company-btn" class="btn-danger" style="padding:10px 16px;font-size:.82rem;white-space:nowrap;">Eliminar</button>
             </div>
-            <div id="message-box" class="mt-4 p-3 hidden rounded-lg text-sm"></div>
+            <div id="message-box" class="mt-3 p-3 hidden rounded-lg text-sm"></div>
+            <!-- STATUS CARDS -->
+            <div id="control-panel" class="hidden" style="margin-top:20px;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px;" id="status-cards">
+                    <div class="status-card" data-folder="folder-legal">
+                        <div class="status-card-icon">&#9878;</div>
+                        <div class="status-card-title">Legal</div>
+                        <div class="status-card-count" id="sc-legal">0/0</div>
+                        <div class="status-card-bar"><div class="status-card-fill" id="sf-legal"></div></div>
+                    </div>
+                    <div class="status-card" data-folder="folder-financiero">
+                        <div class="status-card-icon">&#128176;</div>
+                        <div class="status-card-title">Financiero</div>
+                        <div class="status-card-count" id="sc-financiero">0/0</div>
+                        <div class="status-card-bar"><div class="status-card-fill" id="sf-financiero"></div></div>
+                    </div>
+                    <div class="status-card" data-folder="folder-administrativo">
+                        <div class="status-card-icon">&#128196;</div>
+                        <div class="status-card-title">Administrativo</div>
+                        <div class="status-card-count" id="sc-administrativo">0/0</div>
+                        <div class="status-card-bar"><div class="status-card-fill" id="sf-administrativo"></div></div>
+                    </div>
+                    <div class="status-card" data-folder="folder-actividad">
+                        <div class="status-card-icon">&#128640;</div>
+                        <div class="status-card-title">Actividad</div>
+                        <div class="status-card-count" id="sc-actividad">0/0</div>
+                        <div class="status-card-bar"><div class="status-card-fill" id="sf-actividad"></div></div>
+                    </div>
+                    <div class="status-card" data-folder="folder-emisor">
+                        <div class="status-card-icon">&#128200;</div>
+                        <div class="status-card-title">Emisor</div>
+                        <div class="status-card-count" id="sc-emisor">0/0</div>
+                        <div class="status-card-bar"><div class="status-card-fill" id="sf-emisor"></div></div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:12px;background:rgba(0,0,50,.3);border:1px solid var(--glass-border);">
+                    <div style="flex:1;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                            <span style="font-size:.8rem;font-weight:700;color:#fff;">Progreso Total</span>
+                            <span style="font-size:.8rem;font-weight:700;color:var(--steel-light);" id="control-pct">0%</span>
+                        </div>
+                        <div class="progress-bar-container" style="height:10px;border:none;border-radius:6px;"><div id="control-bar" class="progress-bar" style="height:10px;line-height:10px;font-size:0;border-radius:6px;">0%</div></div>
+                    </div>
+                    <div id="control-status-badge" style="padding:6px 14px;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;background:rgba(133,157,169,.15);color:var(--steel);border:1px solid var(--glass-border);">Sin iniciar</div>
+                </div>
+            </div>
         </div>
 
         <div id="recaudos-section" class="hidden space-y-6">
@@ -444,15 +508,13 @@
 
 <script>
 // ==================== SUPABASE ====================
-const SUPABASE_URL = '__SUPABASE_URL__';
-const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+const SUPABASE_URL = 'https://hyapzawkrzldgadzxnlx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5YXB6YXdrcnpsZGdhZHp4bmx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MTU1NjIsImV4cCI6MjA4NTE5MTU2Mn0.9ynfmd5m4LdeUNC1jxl6l3IkW_dETORrRlufSj9PlH8';
 let sb = null;
 let supabaseReady = false;
 try {
-    if(SUPABASE_URL && SUPABASE_URL.startsWith('http')){
-        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        supabaseReady = true;
-    }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseReady = true;
 } catch(e){ console.warn('Supabase no configurado:',e.message); }
 
 // ==================== STATE ====================
@@ -543,11 +605,32 @@ async function addItem(dk,lid,type,item){const items=getItems(dk);items.push(ite
 async function removeItem(dk,lid,type,idx,fp){if(!confirm('Eliminar este item?'))return;const items=getItems(dk);if(fp)await delFile(fp);items.splice(idx,1);if(!items.length)await delRecName(dk);else qSave(dk,true,{items});recaudosCache[dk]=recaudosCache[dk]||{};recaudosCache[dk].estado_booleano=items.length>0;recaudosCache[dk].metadata_json={items};renderList(lid,items,dk,type);updProg();checkMatrix();showMsg('Eliminado.','success');}
 
 // ==================== PROGRESS ====================
-function updProg(){if(!currentEmpresaId){$('#completion-progress-bar').style.width='0%';$('#completion-progress-bar').textContent='0%';$('#missing-items-list').innerHTML='';return;}let t=0,c=0;const ml=$('#missing-items-list');ml.innerHTML='';$('#all-completed-message').classList.add('hidden');
-$$('.recaudo-checkbox').forEach(cb=>{const k=cb.dataset.recaudo,cc=recaudosCache[k],lb=cb.parentElement.querySelector('label')?.textContent?.trim()||k;if(k==='legal-empresa-matrix'&&cc?.metadata_json?.aplica===false)return;t++;if(cc?.estado_booleano)c++;else{const li=document.createElement('li');li.textContent=lb;li.className='theme-text-light-gray';ml.appendChild(li);}});
-$$('.recaudo-number').forEach(inp=>{const k=inp.dataset.recaudo,cc=recaudosCache[k],hv=cc?.metadata_json?.value!=null&&cc.metadata_json.value!=='';t++;if(hv)c++;else{const li=document.createElement('li');li.textContent=inp.placeholder||k;li.className='theme-text-light-gray';ml.appendChild(li);}});
-LIST_RECAUDOS.forEach(lr=>{t++;const cc=recaudosCache[lr.key];if(cc?.metadata_json?.items?.length>0)c++;else{const li=document.createElement('li');li.textContent=lr.label;li.className='theme-text-light-gray';ml.appendChild(li);}});
-const p=t>0?Math.round(c/t*100):0;$('#completion-progress-bar').style.width=p+'%';$('#completion-progress-bar').textContent=p+'%';if(t>0&&c===t)$('#all-completed-message').classList.remove('hidden');}
+function updProg(){
+if(!currentEmpresaId){$('#completion-progress-bar').style.width='0%';$('#completion-progress-bar').textContent='0%';$('#missing-items-list').innerHTML='';$('#control-panel').classList.add('hidden');updControlCenter(0,0,0);return;}
+$('#control-panel').classList.remove('hidden');
+let t=0,c=0;const ml=$('#missing-items-list');ml.innerHTML='';$('#all-completed-message').classList.add('hidden');
+// Per-folder tracking
+const folderStats={legal:{t:0,c:0},financiero:{t:0,c:0},administrativo:{t:0,c:0},actividad:{t:0,c:0},emisor:{t:0,c:0}};
+function getFolder(k){if(k.startsWith('legal'))return 'legal'; if(k.startsWith('financiero'))return 'financiero'; if(k.startsWith('admin'))return 'administrativo'; if(k.startsWith('actividad'))return 'actividad'; if(k.startsWith('emisor')||k.startsWith('recaudos-'))return 'emisor'; return null;}
+$$('.recaudo-checkbox').forEach(cb=>{const k=cb.dataset.recaudo,cc=recaudosCache[k],lb=cb.parentElement.querySelector('label')?.textContent?.trim()||k;if(k==='legal-empresa-matrix'&&cc?.metadata_json?.aplica===false)return;t++;const fk=getFolder(k);if(fk)folderStats[fk].t++;if(cc?.estado_booleano){c++;if(fk)folderStats[fk].c++;}else{const li=document.createElement('li');li.textContent=lb;li.className='theme-text-light-gray';ml.appendChild(li);}});
+$$('.recaudo-number').forEach(inp=>{const k=inp.dataset.recaudo,cc=recaudosCache[k],hv=cc?.metadata_json?.value!=null&&cc.metadata_json.value!=='';t++;const fk=getFolder(k);if(fk)folderStats[fk].t++;if(hv){c++;if(fk)folderStats[fk].c++;}else{const li=document.createElement('li');li.textContent=inp.placeholder||k;li.className='theme-text-light-gray';ml.appendChild(li);}});
+LIST_RECAUDOS.forEach(lr=>{t++;const cc=recaudosCache[lr.key];const fk=getFolder(lr.key);if(fk)folderStats[fk].t++;if(cc?.metadata_json?.items?.length>0){c++;if(fk)folderStats[fk].c++;}else{const li=document.createElement('li');li.textContent=lr.label;li.className='theme-text-light-gray';ml.appendChild(li);}});
+const p=t>0?Math.round(c/t*100):0;$('#completion-progress-bar').style.width=p+'%';$('#completion-progress-bar').textContent=p+'%';if(t>0&&c===t)$('#all-completed-message').classList.remove('hidden');
+// Update control center
+updControlCenter(p,t,c);
+Object.keys(folderStats).forEach(fk=>{const s=folderStats[fk],pct=s.t>0?Math.round(s.c/s.t*100):0;const countEl=$('#sc-'+fk),fillEl=$('#sf-'+fk);if(countEl)countEl.textContent=s.c+'/'+s.t;if(fillEl)fillEl.style.width=pct+'%';const card=countEl?.closest('.status-card');if(card){card.classList.toggle('complete',s.t>0&&s.c===s.t);}});
+}
+function updControlCenter(pct,total,done){
+const bar=$('#control-bar'),pctEl=$('#control-pct'),badge=$('#control-status-badge');
+if(bar){bar.style.width=pct+'%';}
+if(pctEl)pctEl.textContent=pct+'%';
+if(badge){
+    if(total===0||pct===0){badge.textContent='Sin iniciar';badge.style.background='rgba(133,157,169,.15)';badge.style.color='var(--steel)';badge.style.borderColor='var(--glass-border)';}
+    else if(pct===100){badge.textContent='Completo';badge.style.background='rgba(5,150,105,.2)';badge.style.color='#6ee7b7';badge.style.borderColor='rgba(110,231,183,.3)';}
+    else if(pct>=50){badge.textContent='En progreso';badge.style.background='rgba(133,157,169,.2)';badge.style.color='var(--steel-light)';badge.style.borderColor='var(--steel)';}
+    else{badge.textContent='Iniciado';badge.style.background='rgba(251,191,36,.15)';badge.style.color='#fbbf24';badge.style.borderColor='rgba(251,191,36,.3)';}
+}
+}
 
 // ==================== MATRIX ====================
 function checkMatrix(){const mc=recaudosCache['legal-empresa-matrix'],ac=recaudosCache['legal-actas'],el=$('#matrix-acta-display-status');el.classList.add('hidden');el.classList.remove('status-positive','status-negative');if(!mc)return;if(mc.estado_booleano&&mc.metadata_json?.aplica===true){el.classList.remove('hidden');if(ac?.metadata_json?.items?.length>0){el.textContent='Acta Constitutiva presente';el.classList.add('status-positive');}else{el.textContent='Falta Acta Constitutiva';el.classList.add('status-negative');}}}
@@ -621,6 +704,8 @@ $('#add-marca-rrss-btn').addEventListener('click',async()=>{if(!currentEmpresaId
 document.addEventListener('click',e=>{if(e.target.classList.contains('remove-item-btn')&&currentEmpresaId){removeItem(e.target.dataset.key,e.target.dataset.list,e.target.dataset.type,parseInt(e.target.dataset.index),e.target.dataset.filepath||null);}});
 $('#sim-calcular-btn').addEventListener('click',genPresup);
 $('#sim-pdf-btn').addEventListener('click',exportPDF);
+// Status card clicks -> navigate to folder
+$$('.status-card').forEach(card=>{card.addEventListener('click',()=>{const fid=card.dataset.folder;if(fid)navTo(fid);});});
 });
 </script>
 </body>
