@@ -3,33 +3,31 @@
 -- Ejecutar en Supabase SQL Editor (una sola vez)
 -- =====================================================
 
--- 1. Eliminar politicas RLS existentes de empresas
-DROP POLICY IF EXISTS "Users can view own empresas" ON public.empresas;
-DROP POLICY IF EXISTS "Users can insert own empresas" ON public.empresas;
-DROP POLICY IF EXISTS "Users can update own empresas" ON public.empresas;
-DROP POLICY IF EXISTS "Users can delete own empresas" ON public.empresas;
-DROP POLICY IF EXISTS "Allow all for empresas" ON public.empresas;
-
--- 2. Eliminar FK a auth.users y cambiar tipo a TEXT
-ALTER TABLE public.empresas DROP CONSTRAINT IF EXISTS empresas_usuario_id_fkey;
-ALTER TABLE public.empresas ALTER COLUMN usuario_id TYPE TEXT;
-
--- 3. Crear politicas abiertas (la app maneja auth via password)
-CREATE POLICY "Allow all for empresas" ON public.empresas
-    FOR ALL USING (true) WITH CHECK (true);
-
--- 4. Eliminar politicas RLS existentes de recaudos
+-- 1. Eliminar TODAS las politicas primero (recaudos depende de empresas.usuario_id)
 DROP POLICY IF EXISTS "Users can view own recaudos" ON public.recaudos;
 DROP POLICY IF EXISTS "Users can insert own recaudos" ON public.recaudos;
 DROP POLICY IF EXISTS "Users can update own recaudos" ON public.recaudos;
 DROP POLICY IF EXISTS "Users can delete own recaudos" ON public.recaudos;
 DROP POLICY IF EXISTS "Allow all for recaudos" ON public.recaudos;
 
--- 5. Crear politicas abiertas para recaudos
+DROP POLICY IF EXISTS "Users can view own empresas" ON public.empresas;
+DROP POLICY IF EXISTS "Users can insert own empresas" ON public.empresas;
+DROP POLICY IF EXISTS "Users can update own empresas" ON public.empresas;
+DROP POLICY IF EXISTS "Users can delete own empresas" ON public.empresas;
+DROP POLICY IF EXISTS "Allow all for empresas" ON public.empresas;
+
+-- 2. Ahora si: quitar FK y cambiar tipo a TEXT
+ALTER TABLE public.empresas DROP CONSTRAINT IF EXISTS empresas_usuario_id_fkey;
+ALTER TABLE public.empresas ALTER COLUMN usuario_id TYPE TEXT;
+
+-- 3. Crear politicas abiertas
+CREATE POLICY "Allow all for empresas" ON public.empresas
+    FOR ALL USING (true) WITH CHECK (true);
+
 CREATE POLICY "Allow all for recaudos" ON public.recaudos
     FOR ALL USING (true) WITH CHECK (true);
 
--- 6. Actualizar vista de progreso
+-- 4. Actualizar vista
 CREATE OR REPLACE VIEW public.empresa_progress AS
 SELECT
     e.id as empresa_id,
