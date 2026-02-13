@@ -556,22 +556,26 @@ function navTo(target){
     },100);
 }
 
-// ==================== AUTH (Local password only) ====================
-const APP_PASSWORD='Teso_2020*';
-const LOCAL_USER={id:'percapital-tesoreria',email:'tesoreria@percapital.com',user_metadata:{full_name:'Per Capital'}};
+// ==================== AUTH (Supabase Auth) ====================
+const AUTH_EMAIL='tesoreria@percapital.com';
 
-function handleLogin(e){
+async function handleLogin(e){
     e.preventDefault();
     const pw=$('#login-password').value,err=$('#login-error'),btn=$('#login-btn');
     btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Verificando...';err.classList.add('hidden');
-    if(pw!==APP_PASSWORD){err.textContent='Clave incorrecta';err.classList.remove('hidden');btn.disabled=false;btn.textContent='Ingresar';return;}
-    currentUser=LOCAL_USER;
-    localStorage.setItem('pc_session','1');
-    btn.disabled=false;btn.textContent='Ingresar';
-    showApp();
+    if(!supabaseReady){err.textContent='Base de datos no configurada';err.classList.remove('hidden');btn.disabled=false;btn.textContent='Ingresar';return;}
+    // Intentar iniciar sesion
+    let res=await sb.auth.signInWithPassword({email:AUTH_EMAIL,password:pw});
+    if(!res.error){currentUser=res.data.user;btn.disabled=false;btn.textContent='Ingresar';showApp();return;}
+    // Si falla, intentar registro (primera vez)
+    const sr=await sb.auth.signUp({email:AUTH_EMAIL,password:pw,options:{data:{full_name:'Per Capital'}}});
+    if(!sr.error&&sr.data.session){currentUser=sr.data.user;btn.disabled=false;btn.textContent='Ingresar';showApp();return;}
+    if(!sr.error&&!sr.data.session){err.textContent='Cuenta creada. Desactiva la confirmacion de email en Supabase para continuar.';err.classList.remove('hidden');btn.disabled=false;btn.textContent='Ingresar';return;}
+    // Ambos fallaron: clave incorrecta
+    err.textContent='Clave incorrecta';err.classList.remove('hidden');btn.disabled=false;btn.textContent='Ingresar';
 }
-function handleLogout(){unsubRT();currentUser=null;currentEmpresaId=null;localStorage.removeItem('pc_session');$('#login-screen').classList.remove('hidden');$('#app-root').classList.add('hidden');}
-function checkSession(){if(localStorage.getItem('pc_session')==='1'){currentUser=LOCAL_USER;showApp();}}
+async function handleLogout(){unsubRT();currentUser=null;currentEmpresaId=null;if(supabaseReady)await sb.auth.signOut();$('#login-screen').classList.remove('hidden');$('#app-root').classList.add('hidden');}
+async function checkSession(){if(!supabaseReady)return;const{data:{session}}=await sb.auth.getSession();if(session){currentUser=session.user;showApp();}}
 function showApp(){$('#login-screen').classList.add('hidden');$('#app-root').classList.remove('hidden');const m=currentUser.user_metadata||{};$('#user-display').textContent=(m.full_name||m.name||currentUser.email)+' | Departamento de Tesoreria';loadEmpresas();}
 
 // ==================== EMPRESAS ====================
