@@ -11,27 +11,15 @@ CREATE TABLE IF NOT EXISTS public.empresas (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
     fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    usuario_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    usuario_id TEXT NOT NULL,
     UNIQUE(nombre, usuario_id)
 );
 
 ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view own empresas" ON public.empresas;
-CREATE POLICY "Users can view own empresas" ON public.empresas
-    FOR SELECT USING (auth.uid() = usuario_id);
-
-DROP POLICY IF EXISTS "Users can insert own empresas" ON public.empresas;
-CREATE POLICY "Users can insert own empresas" ON public.empresas
-    FOR INSERT WITH CHECK (auth.uid() = usuario_id);
-
-DROP POLICY IF EXISTS "Users can update own empresas" ON public.empresas;
-CREATE POLICY "Users can update own empresas" ON public.empresas
-    FOR UPDATE USING (auth.uid() = usuario_id);
-
-DROP POLICY IF EXISTS "Users can delete own empresas" ON public.empresas;
-CREATE POLICY "Users can delete own empresas" ON public.empresas
-    FOR DELETE USING (auth.uid() = usuario_id);
+DROP POLICY IF EXISTS "Allow all for empresas" ON public.empresas;
+CREATE POLICY "Allow all for empresas" ON public.empresas
+    FOR ALL USING (true) WITH CHECK (true);
 
 CREATE INDEX IF NOT EXISTS idx_empresas_usuario_id ON public.empresas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_empresas_fecha_creacion ON public.empresas(fecha_creacion DESC);
@@ -52,45 +40,9 @@ CREATE TABLE IF NOT EXISTS public.recaudos (
 
 ALTER TABLE public.recaudos ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view own recaudos" ON public.recaudos;
-CREATE POLICY "Users can view own recaudos" ON public.recaudos
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM public.empresas
-            WHERE empresas.id = recaudos.empresa_id
-            AND empresas.usuario_id = auth.uid()
-        )
-    );
-
-DROP POLICY IF EXISTS "Users can insert own recaudos" ON public.recaudos;
-CREATE POLICY "Users can insert own recaudos" ON public.recaudos
-    FOR INSERT WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM public.empresas
-            WHERE empresas.id = recaudos.empresa_id
-            AND empresas.usuario_id = auth.uid()
-        )
-    );
-
-DROP POLICY IF EXISTS "Users can update own recaudos" ON public.recaudos;
-CREATE POLICY "Users can update own recaudos" ON public.recaudos
-    FOR UPDATE USING (
-        EXISTS (
-            SELECT 1 FROM public.empresas
-            WHERE empresas.id = recaudos.empresa_id
-            AND empresas.usuario_id = auth.uid()
-        )
-    );
-
-DROP POLICY IF EXISTS "Users can delete own recaudos" ON public.recaudos;
-CREATE POLICY "Users can delete own recaudos" ON public.recaudos
-    FOR DELETE USING (
-        EXISTS (
-            SELECT 1 FROM public.empresas
-            WHERE empresas.id = recaudos.empresa_id
-            AND empresas.usuario_id = auth.uid()
-        )
-    );
+DROP POLICY IF EXISTS "Allow all for recaudos" ON public.recaudos;
+CREATE POLICY "Allow all for recaudos" ON public.recaudos
+    FOR ALL USING (true) WITH CHECK (true);
 
 CREATE INDEX IF NOT EXISTS idx_recaudos_empresa_id ON public.recaudos(empresa_id);
 CREATE INDEX IF NOT EXISTS idx_recaudos_nombre ON public.recaudos(nombre_recaudo);
@@ -130,7 +82,7 @@ FROM public.empresas e
 LEFT JOIN public.recaudos r ON e.id = r.empresa_id
 GROUP BY e.id, e.nombre, e.usuario_id;
 
-GRANT SELECT ON public.empresa_progress TO authenticated;
+GRANT SELECT ON public.empresa_progress TO anon, authenticated;
 
 -- =====================================================
 -- REALTIME
