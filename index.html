@@ -466,129 +466,151 @@
 
     <!-- ==================== TAB: RENTA FIJA ==================== -->
     <div id="tab-renta-fija" class="tab-content p-4 sm:p-6 md:p-8 max-w-6xl mx-auto">
-        <div class="glass-card animate-in" style="padding:2rem 2rem 1rem;">
-            <div style="margin-bottom:1.5rem;">
-                <h2 style="font-size:1.4rem;font-weight:800;color:#fff;letter-spacing:.5px;margin:0;">Calculadora de Renta Fija</h2>
-                <p style="color:var(--steel);font-size:.82rem;margin-top:4px;">Monto exacto de inversion &mdash; Dernier Cosmetics 2025-I</p>
-            </div>
+        <style>
+            .rf-in {
+                width:100%; background:rgba(0,0,45,.85)!important; border:1.5px solid rgba(133,157,169,.28)!important;
+                border-radius:10px!important; padding:10px 13px!important; color:#f0f4f8!important;
+                font-size:.9rem!important; font-family:inherit!important; transition:border-color .25s,box-shadow .25s;
+                color-scheme:dark; -webkit-appearance:none; appearance:none;
+            }
+            .rf-in:focus { outline:none!important; border-color:#859DA9!important; box-shadow:0 0 0 3px rgba(133,157,169,.12)!important; background:rgba(0,0,55,.95)!important; }
+            .rf-in-lg { font-size:1.35rem!important; font-weight:800!important; padding:11px 13px!important; }
+            .rf-sel {
+                width:100%; background:rgba(0,0,45,.85)!important; border:1.5px solid rgba(133,157,169,.28)!important;
+                border-radius:10px!important; padding:10px 13px!important; color:#f0f4f8!important;
+                font-size:.9rem!important; font-family:inherit!important; cursor:pointer; color-scheme:dark;
+            }
+            .rf-sel option { background:#000032; color:#fff; }
+            .rf-lbl { display:block; font-size:.66rem; font-weight:700; color:#859DA9; text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+            .rf-fld { margin-bottom:.85rem; }
+            .rf-fld:last-child { margin-bottom:0; }
+            .rf-box { background:rgba(0,0,45,.5); border:1px solid rgba(133,157,169,.2); border-radius:13px; padding:1.1rem; }
+            .rf-stitle { font-size:.63rem; font-weight:800; color:#859DA9; text-transform:uppercase; letter-spacing:1.4px; margin:0 0 .85rem; padding-bottom:.5rem; border-bottom:1px solid rgba(133,157,169,.14); }
+            .rf-row { display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:#c9d1d9; margin-bottom:.42rem; }
+            .rf-row-sep { border-bottom:1px solid rgba(133,157,169,.14); padding-bottom:.42rem; margin-bottom:.42rem; }
+            .rf-row-total { font-size:.9rem; font-weight:800; margin-top:.15rem; }
+            @media(max-width:920px){ .rf-grid{grid-template-columns:1fr!important;} }
+        </style>
 
-            <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;" class="rf-grid">
-                <!-- ===== PANEL IZQUIERDO ===== -->
-                <div style="display:flex;flex-direction:column;gap:1rem;">
-                    <!-- Inputs -->
-                    <div style="background:rgba(0,0,50,.35);border:1px solid var(--glass-border);border-radius:14px;padding:1.25rem;">
-                        <h3 style="font-size:.7rem;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:1.2px;margin:0 0 1rem;">Tu Presupuesto</h3>
+        <div style="margin-bottom:1.25rem;">
+            <h2 style="font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:.4px;margin:0;">Calculadora de Renta Fija</h2>
+            <p style="color:#859DA9;font-size:.8rem;margin-top:3px;">Inversi&oacute;n por monto exacto &mdash; Universal para cualquier papel comercial</p>
+        </div>
 
-                        <div style="margin-bottom:1rem;">
-                            <label style="display:block;font-size:.7rem;font-weight:700;color:#d1d5db;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Monto a Invertir (USD $)</label>
-                            <input type="number" id="rf-presupuesto" value="3000" class="input-glass" style="font-size:1.4rem;font-weight:800;padding:10px 14px;" oninput="rfCalcular()">
-                            <p style="font-size:.65rem;color:var(--steel);margin-top:4px;font-style:italic;">Total que saldr&aacute; de tu cuenta.</p>
-                        </div>
+        <div style="display:grid;grid-template-columns:330px 1fr;gap:1.1rem;" class="rf-grid">
 
-                        <div style="margin-bottom:1rem;">
-                            <label style="display:block;font-size:.7rem;font-weight:700;color:#d1d5db;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Precio de Compra (%)</label>
-                            <input type="number" id="rf-precio" value="98.5" step="0.1" class="input-glass" oninput="rfCalcular()">
-                        </div>
+            <!-- ===== LEFT ===== -->
+            <div style="display:flex;flex-direction:column;gap:.9rem;">
 
-                        <div style="margin-bottom:1rem;">
-                            <label style="display:block;font-size:.7rem;font-weight:700;color:#d1d5db;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Comisi&oacute;n Corretaje (%)</label>
-                            <input type="number" id="rf-comision" value="2.0" step="0.1" class="input-glass" oninput="rfCalcular()">
-                        </div>
-
-                        <div>
-                            <label style="display:block;font-size:.7rem;font-weight:700;color:#d1d5db;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Fecha de Compra</label>
-                            <input type="date" id="rf-fecha" value="2026-04-10" class="input-glass" oninput="rfCalcular()">
-                        </div>
+                <!-- Parametros del papel -->
+                <div class="rf-box">
+                    <p class="rf-stitle">&#127893; Par&aacute;metros del Papel</p>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Fecha de Emisi&oacute;n</label>
+                        <input type="date" id="rf-emision" value="2025-09-19" class="rf-in" oninput="rfCalcular()">
                     </div>
-
-                    <!-- Resultado Maestro -->
-                    <div style="background:linear-gradient(135deg,var(--navy),#000050);border:1px solid var(--glass-border);border-radius:14px;padding:1.25rem;box-shadow:0 0 30px rgba(133,157,169,.15);">
-                        <p style="font-size:.65rem;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 .4rem;">Resultado Maestro</p>
-                        <p style="font-size:.78rem;color:#d1d5db;margin:0 0 .35rem;">Valor Nominal a solicitar:</p>
-                        <div id="rf-res-nominal" style="font-size:2rem;font-weight:900;color:#60a5fa;margin-bottom:1rem;line-height:1.1;">$0.00</div>
-                        <div style="border-top:1px solid var(--glass-border);padding-top:.85rem;display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:.78rem;color:#d1d5db;">TIR Anualizada:</span>
-                            <span id="rf-res-tir" style="font-size:1.3rem;font-weight:800;color:#34d399;">0.00%</span>
-                        </div>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Fecha de Vencimiento</label>
+                        <input type="date" id="rf-venc" value="2026-09-19" class="rf-in" oninput="rfCalcular()">
+                    </div>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Tasa de Inter&eacute;s Anual (%)</label>
+                        <input type="number" id="rf-tasa" value="14.0" step="0.1" min="0" class="rf-in" oninput="rfCalcular()">
+                    </div>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Frecuencia de Pago de Intereses</label>
+                        <select id="rf-frecuencia" class="rf-sel" onchange="rfCalcular()">
+                            <option value="Mensual">Mensual</option>
+                            <option value="Bimestral">Bimestral</option>
+                            <option value="Trimestral" selected>Trimestral</option>
+                            <option value="Semestral">Semestral</option>
+                            <option value="Al Vencimiento">Al Vencimiento</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- ===== PANEL DERECHO ===== -->
-                <div style="display:flex;flex-direction:column;gap:1rem;">
-                    <!-- Desglose -->
-                    <div style="background:rgba(0,0,50,.35);border:1px solid var(--glass-border);border-radius:14px;padding:1.25rem;">
-                        <h3 style="font-size:.7rem;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:1.2px;margin:0 0 1rem;">Desglose al Centavo</h3>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-                            <!-- Pagos -->
-                            <div>
-                                <p style="font-size:.65rem;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:1px;margin:0 0 .75rem;">Lo que pagas hoy</p>
-                                <div style="display:flex;flex-direction:column;gap:.5rem;">
-                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#d1d5db;">
-                                        <span>Capital (Precio Limpio)</span><span id="rf-det-limpio" style="font-weight:700;color:#fff;"></span>
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#d1d5db;">
-                                        <span>Intereses Acumulados</span><span id="rf-det-interes" style="font-weight:700;color:#fb923c;"></span>
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#d1d5db;padding-bottom:.5rem;border-bottom:1px solid var(--glass-border);">
-                                        <span>Comisi&oacute;n Corredor</span><span id="rf-det-comision" style="font-weight:700;color:#f87171;"></span>
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:.9rem;font-weight:800;color:#fff;margin-top:.25rem;">
-                                        <span>TOTAL PAGADO</span><span id="rf-det-total-pagado"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Cobros -->
-                            <div>
-                                <p style="font-size:.65rem;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:1px;margin:0 0 .75rem;">Lo que recibir&aacute;s</p>
-                                <div style="display:flex;flex-direction:column;gap:.5rem;">
-                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#d1d5db;">
-                                        <span>Cup&oacute;n 3 (Junio)</span><span id="rf-det-cupon3" style="font-weight:700;color:#fff;"></span>
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#d1d5db;">
-                                        <span>Cup&oacute;n 4 (Septiembre)</span><span id="rf-det-cupon4" style="font-weight:700;color:#fff;"></span>
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#d1d5db;padding-bottom:.5rem;border-bottom:1px solid var(--glass-border);">
-                                        <span>Reembolso Capital</span><span id="rf-det-reembolso" style="font-weight:700;color:#34d399;"></span>
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:.9rem;font-weight:800;color:#34d399;margin-top:.25rem;">
-                                        <span>TOTAL RECIBIDO</span><span id="rf-det-total-recibido"></span>
-                                    </div>
-                                </div>
-                            </div>
+                <!-- Tu inversión -->
+                <div class="rf-box">
+                    <p class="rf-stitle">&#128176; Tu Inversi&oacute;n</p>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Monto a Invertir (USD $)</label>
+                        <input type="number" id="rf-presupuesto" value="3000" min="0" class="rf-in rf-in-lg" oninput="rfCalcular()">
+                        <p style="font-size:.62rem;color:#859DA9;margin-top:4px;font-style:italic;">Total que saldr&aacute; de tu cuenta</p>
+                    </div>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Precio de Compra (%)</label>
+                        <input type="number" id="rf-precio" value="98.5" step="0.1" min="0" class="rf-in" oninput="rfCalcular()">
+                    </div>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Comisi&oacute;n de Corretaje (%)</label>
+                        <input type="number" id="rf-comision" value="2.0" step="0.1" min="0" class="rf-in" oninput="rfCalcular()">
+                    </div>
+                    <div class="rf-fld">
+                        <label class="rf-lbl">Fecha de Compra (Liquidaci&oacute;n)</label>
+                        <input type="date" id="rf-fecha" value="2026-04-10" class="rf-in" oninput="rfCalcular()">
+                    </div>
+                </div>
+
+                <!-- Resultado Maestro -->
+                <div style="background:linear-gradient(145deg,#000032 0%,#000055 100%);border:1px solid rgba(133,157,169,.22);border-radius:13px;padding:1.15rem;box-shadow:0 0 28px rgba(133,157,169,.1);">
+                    <p style="font-size:.62rem;font-weight:800;color:#859DA9;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 .3rem;">Resultado Maestro</p>
+                    <p style="font-size:.75rem;color:#c9d1d9;margin:0 0 .25rem;">Valor Nominal a solicitar:</p>
+                    <div id="rf-res-nominal" style="font-size:1.9rem;font-weight:900;color:#60a5fa;line-height:1.1;margin-bottom:.85rem;">$0.00</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-top:1px solid rgba(133,157,169,.14);">
+                        <span style="font-size:.78rem;color:#c9d1d9;">TIR Anualizada:</span>
+                        <span id="rf-res-tir" style="font-size:1.25rem;font-weight:800;color:#34d399;">0.00%</span>
+                    </div>
+                    <div id="rf-res-info" style="font-size:.67rem;color:#859DA9;border-top:1px solid rgba(133,157,169,.1);padding-top:.55rem;line-height:1.7;"></div>
+                </div>
+            </div>
+
+            <!-- ===== RIGHT ===== -->
+            <div style="display:flex;flex-direction:column;gap:.9rem;">
+
+                <!-- Desglose -->
+                <div class="rf-box">
+                    <p class="rf-stitle">&#128202; Desglose al Centavo</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                        <!-- Lo que pagas -->
+                        <div>
+                            <p style="font-size:.6rem;font-weight:800;color:#859DA9;text-transform:uppercase;letter-spacing:1px;margin:0 0 .65rem;">Lo que pagas hoy</p>
+                            <div class="rf-row"><span>Capital (Precio Limpio)</span><span id="rf-det-limpio" style="font-weight:700;color:#f0f4f8;"></span></div>
+                            <div class="rf-row"><span>Intereses Acumulados</span><span id="rf-det-interes" style="font-weight:700;color:#fb923c;"></span></div>
+                            <div class="rf-row rf-row-sep"><span>Comisi&oacute;n Corredor</span><span id="rf-det-comision" style="font-weight:700;color:#f87171;"></span></div>
+                            <div class="rf-row rf-row-total"><span style="color:#fff;">TOTAL PAGADO</span><span id="rf-det-total-pagado" style="color:#fff;"></span></div>
                         </div>
-                        <!-- Ganancia -->
-                        <div style="margin-top:1rem;padding:1rem;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:.9rem;font-weight:800;color:#6ee7b7;">GANANCIA NETA FINAL:</span>
-                            <span id="rf-det-ganancia" style="font-size:1.5rem;font-weight:900;color:#34d399;"></span>
+                        <!-- Lo que recibirás (dinámico) -->
+                        <div>
+                            <p style="font-size:.6rem;font-weight:800;color:#859DA9;text-transform:uppercase;letter-spacing:1px;margin:0 0 .65rem;">Lo que recibir&aacute;s</p>
+                            <div id="rf-cobros-container"></div>
                         </div>
                     </div>
+                    <!-- Ganancia -->
+                    <div style="margin-top:.9rem;padding:.85rem 1rem;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:.88rem;font-weight:800;color:#6ee7b7;">GANANCIA NETA FINAL:</span>
+                        <span id="rf-det-ganancia" style="font-size:1.45rem;font-weight:900;color:#34d399;"></span>
+                    </div>
+                </div>
 
-                    <!-- Tabla de flujo -->
-                    <div style="background:rgba(0,0,50,.35);border:1px solid var(--glass-border);border-radius:14px;padding:1.25rem;">
-                        <h3 style="font-size:.7rem;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:1.2px;margin:0 0 1rem;">Calendario de Movimientos</h3>
-                        <div style="border-radius:10px;overflow:hidden;border:1px solid var(--glass-border);">
-                            <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
-                                <thead>
-                                    <tr style="background:rgba(0,0,60,.6);">
-                                        <th style="padding:10px 12px;text-align:left;font-size:.65rem;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.5px;">#</th>
-                                        <th style="padding:10px 12px;text-align:left;font-size:.65rem;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.5px;">Fecha</th>
-                                        <th style="padding:10px 12px;text-align:left;font-size:.65rem;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.5px;">Evento</th>
-                                        <th style="padding:10px 12px;text-align:right;font-size:.65rem;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.5px;">Monto</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rf-tabla-caja" style="divide-y:1px solid var(--glass-border);"></tbody>
-                            </table>
-                        </div>
+                <!-- Calendario de movimientos -->
+                <div class="rf-box">
+                    <p class="rf-stitle">&#128197; Calendario de Movimientos</p>
+                    <div id="rf-tabla-wrap" style="border-radius:10px;overflow:hidden;border:1px solid rgba(133,157,169,.18);max-height:340px;overflow-y:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+                            <thead style="position:sticky;top:0;z-index:1;">
+                                <tr style="background:rgba(0,0,55,.95);">
+                                    <th style="padding:9px 12px;text-align:left;font-size:.62rem;font-weight:700;color:#859DA9;text-transform:uppercase;letter-spacing:.5px;">#</th>
+                                    <th style="padding:9px 12px;text-align:left;font-size:.62rem;font-weight:700;color:#859DA9;text-transform:uppercase;letter-spacing:.5px;">Fecha</th>
+                                    <th style="padding:9px 12px;text-align:left;font-size:.62rem;font-weight:700;color:#859DA9;text-transform:uppercase;letter-spacing:.5px;">Evento</th>
+                                    <th style="padding:9px 12px;text-align:right;font-size:.62rem;font-weight:700;color:#859DA9;text-transform:uppercase;letter-spacing:.5px;">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rf-tabla-caja"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-
-        <style>
-            @media(max-width:900px){
-                .rf-grid{grid-template-columns:1fr!important;}
-            }
-        </style>
     </div>
 
     <!-- ==================== TAB: SIMULADOR ==================== -->
@@ -808,69 +830,122 @@ y=doc.lastAutoTable.finalY+4;doc.setFillColor(254,243,199);doc.rect(mg,y,pW-mg*2
 mkWM(LOGO_URL,0.07,function(wm){if(wm)try{doc.addImage(wm,'PNG',(pW-70)/2,115,70,20);}catch(e){}doc.save('Presupuesto_PC_'+simD.empresa+'.pdf');});});}
 
 // ==================== RENTA FIJA ====================
+function rfD360(a,b){return(b.getFullYear()-a.getFullYear())*360+(b.getMonth()-a.getMonth())*30+(b.getDate()-a.getDate());}
+function rfAddM(d,m){const r=new Date(d);r.setMonth(r.getMonth()+m);return r;}
+function rfFmt(v){return'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function rfFmtD(d){return d.toLocaleDateString('es-VE',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function rfFmtM(d){return d.toLocaleDateString('es-VE',{month:'short',year:'numeric'});}
+
 function rfCalcular(){
-    const presupuesto=parseFloat(document.getElementById('rf-presupuesto')?.value)||0;
-    const precioRef=(parseFloat(document.getElementById('rf-precio')?.value)||0)/100;
-    const comisionRef=(parseFloat(document.getElementById('rf-comision')?.value)||0)/100;
-    const fechaStr=document.getElementById('rf-fecha')?.value;
-    if(!fechaStr||presupuesto<=0)return;
-    const fechaLiq=new Date(fechaStr+'T12:00:00');
-    const tasaCupon=0.14;
-    const fechaUltCupon=new Date('2026-03-19T12:00:00');
-    const fechaVenc=new Date('2026-09-19T12:00:00');
-    const diasAcu=(fechaLiq.getFullYear()-fechaUltCupon.getFullYear())*360
-                 +(fechaLiq.getMonth()-fechaUltCupon.getMonth())*30
-                 +(fechaLiq.getDate()-fechaUltCupon.getDate());
+    const g=id=>document.getElementById(id);
+    const presupuesto=parseFloat(g('rf-presupuesto')?.value)||0;
+    const precioRef  =(parseFloat(g('rf-precio')?.value)||0)/100;
+    const comisionRef=(parseFloat(g('rf-comision')?.value)||0)/100;
+    const tasaCupon  =(parseFloat(g('rf-tasa')?.value)||0)/100;
+    const frecuencia = g('rf-frecuencia')?.value||'Trimestral';
+    const fComp=g('rf-fecha')?.value, fEmis=g('rf-emision')?.value, fVenc=g('rf-venc')?.value;
+    if(!fComp||!fEmis||!fVenc||presupuesto<=0||tasaCupon<=0||precioRef<=0)return;
+
+    const fechaLiq =new Date(fComp+'T12:00:00');
+    const fechaEmis=new Date(fEmis+'T12:00:00');
+    const fechaVenc=new Date(fVenc+'T12:00:00');
+    if(fechaLiq<=fechaEmis||fechaLiq>=fechaVenc)return;
+
+    // Months per period
+    const mesesMap={'Mensual':1,'Bimestral':2,'Trimestral':3,'Semestral':6,'Al Vencimiento':0};
+    const meses=mesesMap[frecuencia]??3;
+
+    // Build full coupon schedule
+    let allCoupons=[];
+    if(frecuencia==='Al Vencimiento'){
+        allCoupons=[new Date(fechaVenc)];
+    } else {
+        let d=rfAddM(fechaEmis,meses);
+        let guard=0;
+        while(rfD360(d,fechaVenc)>0&&guard<600){allCoupons.push(new Date(d));d=rfAddM(d,meses);guard++;}
+        allCoupons.push(new Date(fechaVenc));
+        // deduplicate
+        allCoupons=allCoupons.filter((d,i,a)=>i===0||d.getTime()!==a[i-1].getTime());
+    }
+
+    // Last coupon date before purchase
+    let fechaUltCupon=new Date(fechaEmis);
+    for(const cd of allCoupons){if(cd<fechaLiq)fechaUltCupon=new Date(cd);else break;}
+
+    // Accrued (30/360)
+    const diasAcu=rfD360(fechaUltCupon,fechaLiq);
+    if(diasAcu<0)return;
     const factorIntAcu=tasaCupon*(diasAcu/360);
+
+    // Nominal (inverse formula)
     const nominal=presupuesto/((precioRef+factorIntAcu)*(1+comisionRef));
-    const intAcuTotal=nominal*factorIntAcu;
+    const intAcuTotal  =nominal*factorIntAcu;
     const capitalLimpio=nominal*precioRef;
-    const precioSucio=capitalLimpio+intAcuTotal;
+    const precioSucio  =capitalLimpio+intAcuTotal;
     const montoComision=precioSucio*comisionRef;
-    const totalPagado=precioSucio+montoComision;
-    const cupon3=nominal*tasaCupon*(90/360);
-    const cupon4=cupon3;
-    const totalRecibido=nominal+cupon3+cupon4;
+    const totalPagado  =precioSucio+montoComision;
+
+    // Future coupon dates & amounts
+    const futureCoupons=allCoupons.filter(d=>d>=fechaLiq);
+    const cuponPeriodico=frecuencia==='Al Vencimiento'
+        ? nominal*tasaCupon*(rfD360(fechaEmis,fechaVenc)/360)
+        : nominal*tasaCupon*(meses/12);
+    const futureMtos=futureCoupons.map(()=>cuponPeriodico);
+    const totalCoupons=futureMtos.reduce((a,b)=>a+b,0);
+    const totalRecibido=nominal+totalCoupons;
     const gananciaNeta=totalRecibido-totalPagado;
-    const diasRest=(fechaVenc.getFullYear()-fechaLiq.getFullYear())*360
-                  +(fechaVenc.getMonth()-fechaLiq.getMonth())*30
-                  +(fechaVenc.getDate()-fechaLiq.getDate());
-    const tir=((totalRecibido/totalPagado)-1)*(360/diasRest)*100;
-    const fmt=v=>'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-    set('rf-res-nominal',fmt(nominal));
+
+    // TIR
+    const diasRest=rfD360(fechaLiq,fechaVenc);
+    const tir=diasRest>0?((totalRecibido/totalPagado)-1)*(360/diasRest)*100:0;
+
+    // --- UI update ---
+    const set=(id,v)=>{const el=g(id);if(el)el.textContent=v;};
+    set('rf-res-nominal',rfFmt(nominal));
     set('rf-res-tir',tir.toFixed(2)+'%');
-    set('rf-det-limpio',fmt(capitalLimpio));
-    set('rf-det-interes',fmt(intAcuTotal));
-    set('rf-det-comision',fmt(montoComision));
-    set('rf-det-total-pagado',fmt(totalPagado));
-    set('rf-det-cupon3',fmt(cupon3));
-    set('rf-det-cupon4',fmt(cupon4));
-    set('rf-det-reembolso',fmt(nominal));
-    set('rf-det-total-recibido',fmt(totalRecibido));
-    set('rf-det-ganancia',fmt(gananciaNeta));
-    const tb=document.getElementById('rf-tabla-caja');
+    const infoEl=g('rf-res-info');
+    if(infoEl)infoEl.innerHTML=`Cup. restantes: <strong style="color:#f0f4f8;">${futureCoupons.length}</strong>&nbsp;|&nbsp; Int. acumulado: <strong style="color:#fb923c;">${diasAcu} d&iacute;as</strong>&nbsp;|&nbsp; Frecuencia: <strong style="color:#f0f4f8;">${frecuencia}</strong>`;
+
+    set('rf-det-limpio',  rfFmt(capitalLimpio));
+    set('rf-det-interes', rfFmt(intAcuTotal));
+    set('rf-det-comision',rfFmt(montoComision));
+    set('rf-det-total-pagado',rfFmt(totalPagado));
+    set('rf-det-ganancia',rfFmt(gananciaNeta));
+
+    // Dynamic cobros section
+    const cc=g('rf-cobros-container');
+    if(cc){
+        const rs='display:flex;justify-content:space-between;font-size:.82rem;color:#c9d1d9;margin-bottom:.4rem;';
+        let html='';
+        if(futureCoupons.length<=6){
+            futureCoupons.forEach((d,i)=>{
+                html+=`<div style="${rs}"><span>Cup&oacute;n ${i+1} <span style="font-size:.7rem;color:#859DA9;">(${rfFmtM(d)})</span></span><span style="font-weight:700;color:#f0f4f8;">${rfFmt(futureMtos[i])}</span></div>`;
+            });
+        } else {
+            html+=`<div style="${rs}"><span>Intereses (${futureCoupons.length} cup.)</span><span style="font-weight:700;color:#f0f4f8;">${rfFmt(totalCoupons)}</span></div>`;
+        }
+        html+=`<div style="${rs}border-top:1px solid rgba(133,157,169,.14);padding-top:.4rem;margin-top:.1rem;"><span>Reembolso Capital</span><span style="font-weight:700;color:#34d399;">${rfFmt(nominal)}</span></div>`;
+        html+=`<div style="display:flex;justify-content:space-between;font-size:.9rem;font-weight:800;color:#34d399;margin-top:.15rem;"><span>TOTAL RECIBIDO</span><span>${rfFmt(totalRecibido)}</span></div>`;
+        cc.innerHTML=html;
+    }
+
+    // Cash flow table
+    const tb=g('rf-tabla-caja');
     if(!tb)return;
-    const rowStyle='border-bottom:1px solid rgba(133,157,169,.12);';
-    tb.innerHTML=`
-        <tr style="${rowStyle}background:rgba(0,0,60,.3);">
-            <td style="padding:10px 12px;color:var(--steel);">1</td>
-            <td style="padding:10px 12px;color:#d1d5db;">${fechaLiq.toLocaleDateString('es-VE')}</td>
-            <td style="padding:10px 12px;color:#d1d5db;font-weight:600;">Inversi&oacute;n Inicial</td>
-            <td style="padding:10px 12px;text-align:right;font-weight:700;color:#f87171;">-${fmt(totalPagado)}</td>
-        </tr>
-        <tr style="${rowStyle}">
-            <td style="padding:10px 12px;color:var(--steel);">2</td>
-            <td style="padding:10px 12px;color:#d1d5db;">19/06/2026</td>
-            <td style="padding:10px 12px;color:#d1d5db;">Cobro Cup&oacute;n 3</td>
-            <td style="padding:10px 12px;text-align:right;font-weight:700;color:#34d399;">+${fmt(cupon3)}</td>
-        </tr>
-        <tr>
-            <td style="padding:10px 12px;color:var(--steel);">3</td>
-            <td style="padding:10px 12px;color:#d1d5db;">19/09/2026</td>
-            <td style="padding:10px 12px;color:#d1d5db;font-weight:700;">Capital + Cup&oacute;n 4</td>
-            <td style="padding:10px 12px;text-align:right;font-weight:700;color:#34d399;">+${fmt(nominal+cupon4)}</td>
-        </tr>`;
+    const td=(v,right,bold,col)=>`<td style="padding:8px 12px;${right?'text-align:right;':''}${bold?'font-weight:700;':''}${col?'color:'+col+';':'color:#c9d1d9;'}">${v}</td>`;
+    const rs2='border-bottom:1px solid rgba(133,157,169,.09);';
+    let rows=`<tr style="${rs2}background:rgba(0,0,55,.4);">`
+        +td('0',false,true,'#859DA9')+td(rfFmtD(fechaLiq),false,false)+td('Inversi&oacute;n Inicial',false,true)
+        +td('-'+rfFmt(totalPagado),true,true,'#f87171')+'</tr>';
+    futureCoupons.forEach((d,i)=>{
+        const isLast=d.getTime()===fechaVenc.getTime();
+        const monto=isLast?futureMtos[i]+nominal:futureMtos[i];
+        const label=isLast?`Cup&oacute;n ${i+1} + Capital Final`:`Cobro Cup&oacute;n ${i+1}`;
+        rows+=`<tr style="${isLast?'font-weight:700;':rs2}">`
+            +td(String(i+1),false,false,'#859DA9')+td(rfFmtD(d),false,false)+td(label,false,isLast)
+            +td('+'+rfFmt(monto),true,true,'#34d399')+'</tr>';
+    });
+    tb.innerHTML=rows;
 }
 
 // ==================== INIT ====================
